@@ -129,7 +129,7 @@ sap.ui.define(
           };
         },
 
-        onOpenConfig: function () {
+        onOpenConfig: async function () {
           console.log("onOpenConfig called");
           try {
             const oView = this.base.getView();
@@ -149,13 +149,36 @@ sap.ui.define(
               return;
             }
 
+            // Đọc từ binding context trước, fallback sang URL params
             const oUrlParams = this._getUrlParams();
-            console.log("onOpenConfig urlParams:", JSON.stringify(oUrlParams));
+            const sConfId    = oData.ConfId    || oUrlParams.ConfId    || "";
+            const sConfName  = oData.ReqTitle  || oUrlParams.ConfName  || "";
+            const sModuleId  = oData.ModuleId  || oUrlParams.ModuleId  || "";
+            const sStatus    = oData.Status    || "D";
 
-            const sConfId = oUrlParams.ConfId;
-            const sConfName = oUrlParams.ConfName;
-            const sModuleId = oUrlParams.ModuleId || oData.ModuleId || "";
-            const sTargetCds = oUrlParams.TargetCds;
+            // Đọc TargetCds từ item đầu tiên qua OData
+            let sTargetCds = oUrlParams.TargetCds || "";
+            if (!sTargetCds) {
+              try {
+                const sSapClient = new URLSearchParams(window.location.search).get("sap-client") || "324";
+                const sItemsUrl =
+                  "/sap/opu/odata4/sap/zui_conf_req/srvd/sap/zsd_conf_req/0001/" +
+                  "ZC_CONF_REQ_H(" + sReqId + ")/_Items" +
+                  "?$top=1&$select=TargetCds&sap-client=" + sSapClient;
+                const oResp = await fetch(sItemsUrl, {
+                  credentials: "include",
+                  headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" },
+                });
+                if (oResp.ok) {
+                  const oItemData = await oResp.json();
+                  sTargetCds = oItemData.value?.[0]?.TargetCds || "";
+                }
+              } catch (eFetch) {
+                console.warn("Could not fetch TargetCds from items:", eFetch);
+              }
+            }
+
+            console.log("onOpenConfig params:", { sReqId, sConfId, sConfName, sModuleId, sTargetCds });
 
             const oPortMap = {
               ZI_MM_ROUTE_CONF: "8083",
@@ -169,16 +192,16 @@ sap.ui.define(
             const sUrl =
               "http://localhost:" + sPort + "/test/flp.html" +
               "?sap-ui-xx-viewCache=false" +
-              "&ReqId=" + encodeURIComponent(sReqId) +
-              "&ConfId=" + encodeURIComponent(sConfId) +
+              "&ReqId="    + encodeURIComponent(sReqId) +
+              "&ConfId="   + encodeURIComponent(sConfId) +
               "&ConfName=" + encodeURIComponent(sConfName) +
               "&ModuleId=" + encodeURIComponent(sModuleId) +
-              "&TargetCds=" + encodeURIComponent(sTargetCds) +
+              "&TargetCds="+ encodeURIComponent(sTargetCds) +
+              "&Status="   + encodeURIComponent(sStatus) +
               "#app-preview";
 
             console.log("onOpenConfig navigating to:", sUrl);
 
-            // Dùng anchor element để tránh popup blocker
             const oLink = document.createElement("a");
             oLink.href = sUrl;
             oLink.target = "_blank";

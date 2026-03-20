@@ -1,0 +1,108 @@
+sap.ui.define(
+  ["sap/m/MessageBox", "sap/ui/core/BusyIndicator"],
+  function (MessageBox, BusyIndicator) {
+    "use strict";
+
+    function _getSapClient() {
+      return new URLSearchParams(window.location.search).get("sap-client") || "324";
+    }
+
+    const oPortMap = {
+      ZI_MM_ROUTE_CONF: "8083",
+      ZI_MM_SAFE_STOCK: "8084",
+      ZI_SD_PRICE_CONF: "8085",
+      ZI_FI_LIMIT_CONF: "8086",
+    };
+
+    async function _getTargetCds(sReqId) {
+      try {
+        const sSapClient = _getSapClient();
+        const sUrl =
+          "/sap/opu/odata4/sap/zui_conf_req/srvd/sap/zsd_conf_req/0001/" +
+          "ZC_CONF_REQ_H(" + sReqId + ")/_Items" +
+          "?$top=1&$select=TargetCds&sap-client=" + sSapClient;
+
+        const oResp = await fetch(sUrl, {
+          credentials: "include",
+          headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" },
+        });
+
+        if (oResp.ok) {
+          const oData = await oResp.json();
+          return oData.value?.[0]?.TargetCds || "";
+        }
+      } catch (e) {
+        console.warn("_getTargetCds error:", e);
+      }
+      return "";
+    }
+
+    return {
+      onOpenConfig: async function (oContext) {
+        try {
+          // Resolve binding context
+          let oBindingContext = null;
+          if (oContext && typeof oContext.requestObject === "function") {
+            oBindingContext = oContext;
+          } else if (Array.isArray(oContext) && oContext[0]) {
+            oBindingContext = oContext[0];
+          }
+
+          if (!oBindingContext) {
+            MessageBox.error("No binding context found");
+            return;
+          }
+
+          BusyIndicator.show(0);
+
+          const oData = await oBindingContext.requestObject();
+          console.log("OpenConfigAction oData:", JSON.stringify(oData));
+
+          const sReqId   = oData.ReqId    || "";
+          const sConfId  = oData.ConfId   || "";
+          const sConfName= oData.ReqTitle || "";
+          const sModuleId= oData.ModuleId || "";
+          const sStatus  = oData.Status   || "D";
+
+          if (!sReqId) {
+            BusyIndicator.hide();
+            MessageBox.error("ReqId is missing");
+            return;
+          }
+
+          // Lấy TargetCds từ item đầu tiên
+          const sTargetCds = await _getTargetCds(sReqId);
+          const sPort = oPortMap[sTargetCds] || "8083";
+
+          const sUrl =
+            "http://localhost:" + sPort + "/test/flp.html" +
+            "?sap-ui-xx-viewCache=false" +
+            "&ReqId="    + encodeURIComponent(sReqId) +
+            "&ConfId="   + encodeURIComponent(sConfId) +
+            "&ConfName=" + encodeURIComponent(sConfName) +
+            "&ModuleId=" + encodeURIComponent(sModuleId) +
+            "&TargetCds="+ encodeURIComponent(sTargetCds) +
+            "&Status="   + encodeURIComponent(sStatus) +
+            "#app-preview";
+
+          console.log("OpenConfigAction navigating to:", sUrl);
+
+          BusyIndicator.hide();
+
+          const oLink = document.createElement("a");
+          oLink.href = sUrl;
+          oLink.target = "_blank";
+          oLink.rel = "noopener noreferrer";
+          document.body.appendChild(oLink);
+          oLink.click();
+          document.body.removeChild(oLink);
+
+        } catch (e) {
+          BusyIndicator.hide();
+          console.error("OpenConfigAction error:", e);
+          MessageBox.error(e?.message || "Open Config failed");
+        }
+      },
+    };
+  }
+);

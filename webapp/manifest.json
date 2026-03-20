@@ -181,7 +181,7 @@
                 "header": {
                   "actions": {
                     "openConfig": {
-                      "press": "zgsp26.conf.request.confrequestapp.ext.controller.RequestObjectExt.onOpenConfig",
+                      "press": "zgsp26.conf.request.confrequestapp.ext.controller.OpenConfigAction.onOpenConfig",
                       "text": "Open Config",
                       "enabled": true,
                       "visible": true
