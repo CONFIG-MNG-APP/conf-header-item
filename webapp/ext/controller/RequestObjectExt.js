@@ -119,56 +119,76 @@ sap.ui.define(
             oLayout.addSection(oSection);
           }
         },
-        onOpenConfig: function () {
-          const oView = this.base.getView();
-          const oContext = oView.getBindingContext();
-
-          if (!oContext) {
-            sap.m.MessageBox.error("No request context found");
-            return;
-          }
-
-          const oData = oContext.getObject();
-          const sReqId = oData.ReqId || "";
-          const sConfId = oData.ConfId || "";
-          const sConfName = oData.ConfName || "";
-          const sModuleId = oData.ModuleId || "";
-          const sTargetCds = oData.TargetCds || "";
-
-          if (!sReqId) {
-            sap.m.MessageBox.error("ReqId not found");
-            return;
-          }
-
-          // Map TargetCds → port của từng app config
-          const oPortMap = {
-            ZI_MM_ROUTE_CONF: "8083",
-            ZI_MM_SAFE_STOCK: "8084",
-            ZI_SD_PRICE_CONF: "8085",
-            ZI_FI_LIMIT_CONF: "8086",
+        _getUrlParams: function () {
+          const oParams = new URLSearchParams(window.location.search);
+          return {
+            ConfId: oParams.get("ConfId") || "",
+            ConfName: oParams.get("ConfName") || "",
+            ModuleId: oParams.get("ModuleId") || "",
+            TargetCds: oParams.get("TargetCds") || "",
           };
+        },
 
-          const sPort = oPortMap[sTargetCds] || "8083";
+        onOpenConfig: function () {
+          console.log("onOpenConfig called");
+          try {
+            const oView = this.base.getView();
+            const oContext = oView.getBindingContext();
 
-          const sUrl =
-            "http://localhost:" +
-            sPort +
-            "/test/flp.html" +
-            "?sap-ui-xx-viewCache=false" +
-            "&ReqId=" +
-            encodeURIComponent(sReqId) +
-            "&ConfId=" +
-            encodeURIComponent(sConfId) +
-            "&ConfName=" +
-            encodeURIComponent(sConfName) +
-            "&ModuleId=" +
-            encodeURIComponent(sModuleId) +
-            "&TargetCds=" +
-            encodeURIComponent(sTargetCds) +
-            "#app-preview";
+            if (!oContext) {
+              console.error("onOpenConfig: no binding context");
+              return;
+            }
 
-          console.log("Navigate to config app:", sUrl);
-          window.open(sUrl, "_blank");
+            const oData = oContext.getObject();
+            console.log("onOpenConfig oData:", JSON.stringify(oData));
+
+            const sReqId = oData.ReqId || "";
+            if (!sReqId) {
+              console.error("onOpenConfig: ReqId missing", oData);
+              return;
+            }
+
+            const oUrlParams = this._getUrlParams();
+            console.log("onOpenConfig urlParams:", JSON.stringify(oUrlParams));
+
+            const sConfId = oUrlParams.ConfId;
+            const sConfName = oUrlParams.ConfName;
+            const sModuleId = oUrlParams.ModuleId || oData.ModuleId || "";
+            const sTargetCds = oUrlParams.TargetCds;
+
+            const oPortMap = {
+              ZI_MM_ROUTE_CONF: "8083",
+              ZI_MM_SAFE_STOCK: "8084",
+              ZI_SD_PRICE_CONF: "8085",
+              ZI_FI_LIMIT_CONF: "8086",
+            };
+
+            const sPort = oPortMap[sTargetCds] || "8083";
+
+            const sUrl =
+              "http://localhost:" + sPort + "/test/flp.html" +
+              "?sap-ui-xx-viewCache=false" +
+              "&ReqId=" + encodeURIComponent(sReqId) +
+              "&ConfId=" + encodeURIComponent(sConfId) +
+              "&ConfName=" + encodeURIComponent(sConfName) +
+              "&ModuleId=" + encodeURIComponent(sModuleId) +
+              "&TargetCds=" + encodeURIComponent(sTargetCds) +
+              "#app-preview";
+
+            console.log("onOpenConfig navigating to:", sUrl);
+
+            // Dùng anchor element để tránh popup blocker
+            const oLink = document.createElement("a");
+            oLink.href = sUrl;
+            oLink.target = "_blank";
+            oLink.rel = "noopener noreferrer";
+            document.body.appendChild(oLink);
+            oLink.click();
+            document.body.removeChild(oLink);
+          } catch (e) {
+            console.error("onOpenConfig error:", e);
+          }
         },
       },
     );

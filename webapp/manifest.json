@@ -176,6 +176,18 @@
                     "route": "ZC_CONF_REQ_IObjectPage"
                   }
                 }
+              },
+              "content": {
+                "header": {
+                  "actions": {
+                    "openConfig": {
+                      "press": "zgsp26.conf.request.confrequestapp.ext.controller.RequestObjectExt.onOpenConfig",
+                      "text": "Open Config",
+                      "enabled": true,
+                      "visible": true
+                    }
+                  }
+                }
               }
             }
           }
