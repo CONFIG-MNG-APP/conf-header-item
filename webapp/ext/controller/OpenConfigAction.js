@@ -4,7 +4,9 @@ sap.ui.define(
     "use strict";
 
     function _getSapClient() {
-      return new URLSearchParams(window.location.search).get("sap-client") || "324";
+      return (
+        new URLSearchParams(window.location.search).get("sap-client") || "324"
+      );
     }
 
     const oPortMap = {
@@ -19,12 +21,18 @@ sap.ui.define(
         const sSapClient = _getSapClient();
         const sUrl =
           "/sap/opu/odata4/sap/zui_conf_req/srvd/sap/zsd_conf_req/0001/" +
-          "ZC_CONF_REQ_H(" + sReqId + ")/_Items" +
-          "?$top=1&$select=TargetCds&sap-client=" + sSapClient;
+          "ZC_CONF_REQ_H(" +
+          sReqId +
+          ")/_Items" +
+          "?$top=1&$select=TargetCds&sap-client=" +
+          sSapClient;
 
         const oResp = await fetch(sUrl, {
           credentials: "include",
-          headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" },
+          headers: {
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
         });
 
         if (oResp.ok) {
@@ -58,11 +66,11 @@ sap.ui.define(
           const oData = await oBindingContext.requestObject();
           console.log("OpenConfigAction oData:", JSON.stringify(oData));
 
-          const sReqId   = oData.ReqId    || "";
-          const sConfId  = oData.ConfId   || "";
-          const sConfName= oData.ReqTitle || "";
-          const sModuleId= oData.ModuleId || "";
-          const sStatus  = oData.Status   || "D";
+          const sReqId = oData.ReqId || "";
+          const sConfId = oData.ConfId || "";
+          const sConfName = oData.ReqTitle || "";
+          const sModuleId = oData.ModuleId || "";
+          const sStatus = oData.Status || "D";
 
           if (!sReqId) {
             BusyIndicator.hide();
@@ -75,14 +83,22 @@ sap.ui.define(
           const sPort = oPortMap[sTargetCds] || "8083";
 
           const sUrl =
-            "http://localhost:" + sPort + "/test/flp.html" +
+            "http://localhost:" +
+            sPort +
+            "/test/flp.html" +
             "?sap-ui-xx-viewCache=false" +
-            "&ReqId="    + encodeURIComponent(sReqId) +
-            "&ConfId="   + encodeURIComponent(sConfId) +
-            "&ConfName=" + encodeURIComponent(sConfName) +
-            "&ModuleId=" + encodeURIComponent(sModuleId) +
-            "&TargetCds="+ encodeURIComponent(sTargetCds) +
-            "&Status="   + encodeURIComponent(sStatus) +
+            "&ReqId=" +
+            encodeURIComponent(sReqId) +
+            "&ConfId=" +
+            encodeURIComponent(sConfId) +
+            "&ConfName=" +
+            encodeURIComponent(sConfName) +
+            "&ModuleId=" +
+            encodeURIComponent(sModuleId) +
+            "&TargetCds=" +
+            encodeURIComponent(sTargetCds) +
+            "&Status=" +
+            encodeURIComponent(sStatus) +
             "#app-preview";
 
           console.log("OpenConfigAction navigating to:", sUrl);
@@ -91,12 +107,11 @@ sap.ui.define(
 
           const oLink = document.createElement("a");
           oLink.href = sUrl;
-          oLink.target = "_blank";
+          oLink.target = "_self";
           oLink.rel = "noopener noreferrer";
           document.body.appendChild(oLink);
           oLink.click();
           document.body.removeChild(oLink);
-
         } catch (e) {
           BusyIndicator.hide();
           console.error("OpenConfigAction error:", e);
@@ -104,5 +119,5 @@ sap.ui.define(
         }
       },
     };
-  }
+  },
 );

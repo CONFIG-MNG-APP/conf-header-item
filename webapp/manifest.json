@@ -79,7 +79,7 @@
         }
       }
     },
-    "flexEnabled": true,
+    "flexEnabled": false,
     "dependencies": {
       "minUI5Version": "1.108.33",
       "libs": {
@@ -115,15 +115,17 @@
       }
     },
     "resources": {
-      "css": []
+      "css": [
+        { "uri": "ext/catalogLanding/CatalogLanding.css" }
+      ]
     },
     "routing": {
       "config": {},
       "routes": [
         {
-          "pattern": ":?query:",
-          "name": "ZC_CONF_REQ_HList",
-          "target": "ZC_CONF_REQ_HList"
+          "pattern": "ZC_CONF_REQ_H({key})/_Items({key2}):?query:",
+          "name": "ZC_CONF_REQ_IObjectPage",
+          "target": "ZC_CONF_REQ_IObjectPage"
         },
         {
           "pattern": "ZC_CONF_REQ_H({key}):?query:",
@@ -131,12 +133,44 @@
           "target": "ZC_CONF_REQ_HObjectPage"
         },
         {
-          "pattern": "ZC_CONF_REQ_H({key})/_Items({key2}):?query:",
-          "name": "ZC_CONF_REQ_IObjectPage",
-          "target": "ZC_CONF_REQ_IObjectPage"
+          "pattern": "catalog:?query:",
+          "name": "CatalogLanding",
+          "target": "CatalogLanding"
+        },
+        {
+          "pattern": "list:?query:",
+          "name": "ZC_CONF_REQ_HList",
+          "target": "ZC_CONF_REQ_HList"
+        },
+        {
+          "pattern": ":?query:",
+          "name": "Dashboard",
+          "target": "Dashboard"
         }
       ],
       "targets": {
+        "Dashboard": {
+          "type": "Component",
+          "id": "Dashboard",
+          "name": "sap.fe.core.fpm",
+          "options": {
+            "settings": {
+              "viewName": "zgsp26.conf.request.confrequestapp.ext.dashboard.Dashboard",
+              "contextPath": "/ZC_CONF_REQ_H"
+            }
+          }
+        },
+        "CatalogLanding": {
+          "type": "Component",
+          "id": "CatalogLanding",
+          "name": "sap.fe.core.fpm",
+          "options": {
+            "settings": {
+              "viewName": "zgsp26.conf.request.confrequestapp.ext.catalogLanding.CatalogLanding",
+              "contextPath": "/ZC_CONF_REQ_H"
+            }
+          }
+        },
         "ZC_CONF_REQ_HList": {
           "type": "Component",
           "id": "ZC_CONF_REQ_HList",

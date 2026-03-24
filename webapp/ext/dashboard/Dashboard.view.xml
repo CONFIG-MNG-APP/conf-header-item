@@ -1,0 +1,195 @@
+<mvc:View
+  controllerName="zgsp26.conf.request.confrequestapp.ext.dashboard.Dashboard"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:f="sap.f"
+  xmlns:fd="sap.f.dynamic"
+  xmlns:layout="sap.ui.layout"
+  xmlns:form="sap.ui.layout.form"
+  xmlns:core="sap.ui.core"
+  displayBlock="true">
+
+  <f:DynamicPage id="dashPage" toggleHeaderOnTitleClick="false" showFooter="false">
+
+    <f:title>
+      <f:DynamicPageTitle>
+        <f:heading>
+          <VBox>
+            <Title text="My Configuration Requests" level="H2" />
+            <Text text="Track and manage your change requests" class="sapUiTinyMarginTop" />
+          </VBox>
+        </f:heading>
+        <f:actions>
+          <Button
+            text="View All Requests"
+            icon="sap-icon://list"
+            press=".onViewAll" />
+        </f:actions>
+      </f:DynamicPageTitle>
+    </f:title>
+
+    <f:content>
+      <VBox class="sapUiMediumMarginBegin sapUiMediumMarginEnd sapUiSmallMarginTop sapUiMediumMarginBottom">
+
+        <!-- KPI Tiles -->
+        <HBox wrap="Wrap" alignItems="Stretch" class="sapUiSmallMarginBottom">
+          <GenericTile
+            class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+            header="Total Requests"
+            subheader="All my requests"
+            frameType="OneByOne"
+            press=".onTilePress('ALL')"
+            state="{dash>/loading ? 'Loading' : 'Loaded'}">
+            <tileContent>
+              <TileContent>
+                <content>
+                  <NumericContent
+                    value="{dash>/kpi/total}"
+                    icon="sap-icon://documents"
+                    withMargin="false" />
+                </content>
+              </TileContent>
+            </tileContent>
+          </GenericTile>
+
+          <GenericTile
+            class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+            header="Pending Approval"
+            subheader="Awaiting manager"
+            frameType="OneByOne"
+            press=".onTilePress('SUBMITTED')">
+            <tileContent>
+              <TileContent>
+                <content>
+                  <NumericContent
+                    value="{dash>/kpi/submitted}"
+                    icon="sap-icon://pending"
+                    valueColor="Critical"
+                    withMargin="false" />
+                </content>
+              </TileContent>
+            </tileContent>
+          </GenericTile>
+
+          <GenericTile
+            class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+            header="Approved"
+            subheader="Ready to deploy"
+            frameType="OneByOne"
+            press=".onTilePress('APPROVED')">
+            <tileContent>
+              <TileContent>
+                <content>
+                  <NumericContent
+                    value="{dash>/kpi/approved}"
+                    icon="sap-icon://accept"
+                    valueColor="Good"
+                    withMargin="false" />
+                </content>
+              </TileContent>
+            </tileContent>
+          </GenericTile>
+
+          <GenericTile
+            class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+            header="Rejected"
+            subheader="Needs revision"
+            frameType="OneByOne"
+            press=".onTilePress('REJECTED')">
+            <tileContent>
+              <TileContent>
+                <content>
+                  <NumericContent
+                    value="{dash>/kpi/rejected}"
+                    icon="sap-icon://decline"
+                    valueColor="Error"
+                    withMargin="false" />
+                </content>
+              </TileContent>
+            </tileContent>
+          </GenericTile>
+
+          <GenericTile
+            class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+            header="Draft"
+            subheader="Not submitted"
+            frameType="OneByOne"
+            press=".onTilePress('DRAFT')">
+            <tileContent>
+              <TileContent>
+                <content>
+                  <NumericContent
+                    value="{dash>/kpi/draft}"
+                    icon="sap-icon://edit"
+                    withMargin="false" />
+                </content>
+              </TileContent>
+            </tileContent>
+          </GenericTile>
+        </HBox>
+
+        <!-- Filter Bar -->
+        <Toolbar class="sapUiSmallMarginBottom" style="background:transparent;border:none;">
+          <Title text="Recent Requests" level="H4" />
+          <ToolbarSpacer />
+          <SegmentedButton
+            id="statusFilter"
+            selectionChange=".onStatusFilterChange">
+            <items>
+              <SegmentedButtonItem text="All" key="ALL" />
+              <SegmentedButtonItem text="Pending" key="SUBMITTED" />
+              <SegmentedButtonItem text="Approved" key="APPROVED" />
+              <SegmentedButtonItem text="Rejected" key="REJECTED" />
+              <SegmentedButtonItem text="Draft" key="DRAFT" />
+            </items>
+          </SegmentedButton>
+          <Button icon="sap-icon://refresh" tooltip="Refresh" press=".onRefresh" type="Transparent" />
+        </Toolbar>
+
+        <!-- Requests Table -->
+        <Table
+          id="reqTable"
+          items="{dash>/requests}"
+          noDataText="No requests found"
+          growing="true"
+          growingThreshold="15"
+          growingScrollToLoad="true"
+          busyIndicatorDelay="0"
+          busy="{dash>/loading}">
+          <columns>
+            <Column width="35%"><Text text="Title" /></Column>
+            <Column width="10%"><Text text="Module" /></Column>
+            <Column width="12%"><Text text="Environment" /></Column>
+            <Column width="16%"><Text text="Status" /></Column>
+            <Column width="15%"><Text text="Created On" /></Column>
+            <Column width="12%" hAlign="End"><Text text="Actions" /></Column>
+          </columns>
+          <items>
+            <ColumnListItem type="Navigation" press=".onRowPress">
+              <cells>
+                <VBox>
+                  <Text text="{dash>ReqTitle}" maxLines="1" />
+                  <Text text="{dash>ReqId}" class="sapUiTinyMarginTop" style="font-size:0.75rem;color:#6a6d70;" />
+                </VBox>
+                <ObjectIdentifier title="{dash>ModuleId}" />
+                <Text text="{dash>EnvId}" />
+                <ObjectStatus
+                  text="{dash>StatusText}"
+                  state="{dash>StatusState}"
+                  icon="{dash>StatusIcon}" />
+                <Text text="{dash>CreatedAtText}" />
+                <Button
+                  icon="sap-icon://navigation-right-arrow"
+                  type="Transparent"
+                  tooltip="View Detail"
+                  press=".onRowPress" />
+              </cells>
+            </ColumnListItem>
+          </items>
+        </Table>
+
+      </VBox>
+    </f:content>
+
+  </f:DynamicPage>
+</mvc:View>

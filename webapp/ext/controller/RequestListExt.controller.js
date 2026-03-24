@@ -16,9 +16,10 @@ sap.ui.define(
             const oCatalogCtx = this._getCatalogContext();
             console.log("Catalog context =", oCatalogCtx);
 
-            if (oCatalogCtx?.ConfId) {
-              this._waitAndApplyFilter(oCatalogCtx);
-            }
+            // Fetch current user role first, then apply all filters
+            this._initUserRole().then((sRole) => {
+              this._waitAndApplyFilter(oCatalogCtx, sRole);
+            });
           },
 
           onBeforeCreate: function (oEvent) {
@@ -62,8 +63,59 @@ sap.ui.define(
           return oAppComponent?.getModel("catalogCtx")?.getData() || {};
         },
 
-        // 🔥 Đợi table render xong rồi filter
-        _waitAndApplyFilter: function (oCatalogCtx) {
+        /**
+         * Get current SAP user ID from shell, then fetch their role from ZI_CURRENT_USER_ROLE.
+         * Stores UserId and RoleLevel on this instance for later use.
+         * Returns the RoleLevel string (trimmed), or '' if no role found.
+         */
+        _initUserRole: function () {
+          // Get current user from SAP Fiori shell (sy-uname equivalent on frontend)
+          const sCurrentUser =
+            sap.ushell?.Container?.getService?.("UserInfo")?.getId?.() || "";
+          this._currentUserId = sCurrentUser;
+
+          if (!sCurrentUser) {
+            this._currentUserRole = "";
+            return Promise.resolve("");
+          }
+
+          const oModel = this.base.getView().getModel();
+          const oBinding = oModel.bindList(
+            "/ZI_CURRENT_USER_ROLE",
+            undefined,
+            undefined,
+            [
+              new Filter("UserId", FilterOperator.EQ, sCurrentUser),
+              new Filter("IsActive", FilterOperator.EQ, true),
+            ],
+          );
+
+          return oBinding
+            .requestContexts(0, 1)
+            .then((aContexts) => {
+              if (aContexts.length > 0) {
+                this._currentUserRole = (
+                  aContexts[0].getProperty("RoleLevel") || ""
+                ).trim();
+              } else {
+                this._currentUserRole = "";
+              }
+              console.log(
+                "User role =",
+                this._currentUserRole,
+                "| UserId =",
+                this._currentUserId,
+              );
+              return this._currentUserRole;
+            })
+            .catch(() => {
+              this._currentUserRole = "";
+              return "";
+            });
+        },
+
+        // Wait for table to render then apply filters
+        _waitAndApplyFilter: function (oCatalogCtx, sRole) {
           const fnTry = () => {
             const oTable = this.base.byId(
               "zgsp26.conf.request.confrequestapp::ZC_CONF_REQ_HList--fe::table::ZC_CONF_REQ_H::LineItem",
@@ -81,23 +133,30 @@ sap.ui.define(
               return;
             }
 
-            this._applyFilter(oBinding, oCatalogCtx);
+            this._applyFilter(oBinding, oCatalogCtx, sRole);
           };
 
           fnTry();
         },
 
-        _applyFilter: function (oBinding, oCatalogCtx) {
+        _applyFilter: function (oBinding, oCatalogCtx, sRole) {
           const aFilters = [];
 
-          if (oCatalogCtx.ConfId) {
+          // Filter by ConfId when navigating from catalog
+          if (oCatalogCtx?.ConfId) {
             aFilters.push(
               new Filter("ConfId", FilterOperator.EQ, oCatalogCtx.ConfId),
             );
           }
 
-          console.log("Apply filter =", aFilters);
+          // KEY USER only sees their own requests
+          if (sRole === "KEY USER" && this._currentUserId) {
+            aFilters.push(
+              new Filter("CreatedBy", FilterOperator.EQ, this._currentUserId),
+            );
+          }
 
+          console.log("Apply filter =", aFilters);
           oBinding.filter(aFilters);
         },
       },

@@ -1,0 +1,125 @@
+/* ─── Info Card ─── */
+.catInfoCard {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-left: 4px solid #0070f2;
+  border-radius: 8px;
+  padding: 16px 20px;
+  min-width: 230px;
+  flex: 0 0 auto;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  box-sizing: border-box;
+  margin-right: 12px;
+  margin-bottom: 8px;
+}
+
+.catSectionLabel {
+  font-weight: 700 !important;
+  font-size: 0.7rem !important;
+  color: #89919a !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.catFieldIcon {
+  width: 22px;
+  flex-shrink: 0;
+}
+
+.catFieldLabel {
+  font-size: 0.7rem !important;
+  color: #89919a !important;
+}
+
+.catFieldValue {
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  color: #32363a !important;
+}
+
+/* ─── KPI Container ─── */
+.catKpiContainer {
+  flex: 1 1 auto !important;
+  gap: 10px;
+  min-width: 0;
+  margin-bottom: 8px;
+}
+
+/* ─── KPI Card base ─── */
+.catKpiCard {
+  flex: 1 1 0 !important;
+  min-width: 90px;
+  border-radius: 8px;
+  padding: 18px 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.catKpiCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.13) !important;
+}
+
+/* ─── KPI Card color variants ─── */
+.catKpiCard--blue {
+  background: linear-gradient(135deg, #e8f1fb 0%, #fff 100%);
+  border: 1px solid #cfe2f7;
+  border-top: 4px solid #0070f2;
+  box-shadow: 0 1px 6px rgba(0, 112, 242, 0.08);
+}
+.catKpiCard--orange {
+  background: linear-gradient(135deg, #fef3e8 0%, #fff 100%);
+  border: 1px solid #f5cda5;
+  border-top: 4px solid #e9730c;
+  box-shadow: 0 1px 6px rgba(233, 115, 12, 0.08);
+}
+.catKpiCard--green {
+  background: linear-gradient(135deg, #e8f5ee 0%, #fff 100%);
+  border: 1px solid #aad4ba;
+  border-top: 4px solid #107e3e;
+  box-shadow: 0 1px 6px rgba(16, 126, 62, 0.08);
+}
+.catKpiCard--red {
+  background: linear-gradient(135deg, #fce8e8 0%, #fff 100%);
+  border: 1px solid #f0aaaa;
+  border-top: 4px solid #bb0000;
+  box-shadow: 0 1px 6px rgba(187, 0, 0, 0.08);
+}
+.catKpiCard--grey {
+  background: linear-gradient(135deg, #f2f2f2 0%, #fff 100%);
+  border: 1px solid #d9d9d9;
+  border-top: 4px solid #89919a;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* ─── KPI Numbers ─── */
+.catKpiNumber {
+  font-size: 2.1rem !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+}
+.catKpiNumber--blue   { color: #0070f2 !important; }
+.catKpiNumber--orange { color: #e9730c !important; }
+.catKpiNumber--green  { color: #107e3e !important; }
+.catKpiNumber--red    { color: #bb0000 !important; }
+.catKpiNumber--grey   { color: #6a6d70 !important; }
+
+/* ─── KPI Labels ─── */
+.catKpiLabel {
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+.catKpiLabel--blue   { color: #0070f2 !important; }
+.catKpiLabel--orange { color: #e9730c !important; }
+.catKpiLabel--green  { color: #107e3e !important; }
+.catKpiLabel--red    { color: #bb0000 !important; }
+.catKpiLabel--grey   { color: #6a6d70 !important; }
+
+/* ─── KPI Icon spacing ─── */
+.catKpiIconSpacer {
+  margin-top: 6px;
+}

@@ -1,0 +1,191 @@
+<mvc:View
+  controllerName="zgsp26.conf.request.confrequestapp.ext.catalogLanding.CatalogLanding"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:f="sap.f"
+  xmlns:layout="sap.ui.layout"
+  xmlns:form="sap.ui.layout.form"
+  xmlns:core="sap.ui.core"
+  displayBlock="true">
+
+  <f:DynamicPage id="catalogPage" toggleHeaderOnTitleClick="false" headerPinned="true">
+
+    <!-- ─── Title ─── -->
+    <f:title>
+      <f:DynamicPageTitle>
+        <f:heading>
+          <VBox>
+            <HBox alignItems="Center">
+              <core:Icon src="sap-icon://settings" size="1.5rem" color="#0070f2" class="sapUiSmallMarginEnd" />
+              <Title text="{catalog>/ConfName}" level="H2" />
+            </HBox>
+            <Text text="Configuration Change Requests" class="sapUiTinyMarginTop" />
+          </VBox>
+        </f:heading>
+        <f:navigationActions>
+          <Button icon="sap-icon://nav-back" tooltip="Back to My Requests" press=".onNavBack" type="Transparent" />
+        </f:navigationActions>
+        <f:actions>
+          <Button
+            id="btnOpenConfig"
+            text="Open Configuration"
+            icon="sap-icon://action"
+            type="Emphasized"
+            press=".onOpenConfig" />
+        </f:actions>
+      </f:DynamicPageTitle>
+    </f:title>
+
+    <!-- ─── Pinned Header: Catalog Context ─── -->
+    <f:header>
+      <f:DynamicPageHeader id="catDynHeader" pinnable="true">
+
+        <HBox id="catHeaderBox" wrap="Wrap" alignItems="Stretch" width="100%"
+              class="sapUiSmallMarginBottom sapUiTinyMarginTop">
+
+          <!-- ── Left: Config Info Card ── -->
+          <VBox id="catInfoCard" class="catInfoCard sapUiSmallMarginBottom">
+            <HBox id="catInfoCardTitle" alignItems="Center" class="sapUiTinyMarginBottom">
+              <core:Icon id="catInfoIcon" src="sap-icon://detail-view" color="#0070f2" size="0.875rem" class="sapUiSmallMarginEnd" />
+              <Text id="catInfoLabel" text="CONFIGURATION DETAILS" class="catSectionLabel" />
+            </HBox>
+            <HBox id="catModuleRow" alignItems="Center" class="sapUiSmallMarginTop">
+              <core:Icon id="catModuleIcon" src="sap-icon://puzzle" color="#0070f2" size="0.85rem" class="catFieldIcon" />
+              <VBox id="catModuleVBox" class="sapUiTinyMarginBegin">
+                <Text id="catModuleLbl" text="Module" class="catFieldLabel" />
+                <ObjectStatus id="catModuleStatus" text="{catalog>/ModuleId}" state="Information" inverted="true" />
+              </VBox>
+            </HBox>
+            <HBox id="catEnvRow" alignItems="Center" class="sapUiSmallMarginTop">
+              <core:Icon id="catEnvIcon" src="sap-icon://world" color="#107e3e" size="0.85rem" class="catFieldIcon" />
+              <VBox id="catEnvVBox" class="sapUiTinyMarginBegin">
+                <Text id="catEnvLbl" text="Environment" class="catFieldLabel" />
+                <ObjectStatus id="catEnvStatus" text="{catalog>/EnvId}" state="Success" inverted="true" />
+              </VBox>
+            </HBox>
+            <HBox id="catCdsRow" alignItems="Center" class="sapUiSmallMarginTop">
+              <core:Icon id="catCdsIcon" src="sap-icon://database" color="#6a6d70" size="0.85rem" class="catFieldIcon" />
+              <VBox id="catCdsVBox" class="sapUiTinyMarginBegin">
+                <Text id="catCdsLbl" text="Target CDS" class="catFieldLabel" />
+                <Text id="catCdsValue" text="{catalog>/TargetCds}" class="catFieldValue" />
+              </VBox>
+            </HBox>
+          </VBox>
+
+          <!-- ── Right: KPI Cards ── -->
+          <HBox id="catKpiBox" wrap="NoWrap" alignItems="Stretch" class="catKpiContainer">
+
+            <VBox id="catKpiTotal" alignItems="Center" justifyContent="Center"
+                  class="catKpiCard catKpiCard--blue">
+              <Text id="catKpiTotalNum" text="{catalog>/kpi/total}" class="catKpiNumber catKpiNumber--blue" />
+              <core:Icon id="catKpiTotalIcon" src="sap-icon://documents" color="#0070f2" size="0.9rem" class="catKpiIconSpacer" />
+              <Text id="catKpiTotalLbl" text="Total" class="catKpiLabel catKpiLabel--blue" />
+            </VBox>
+
+            <VBox id="catKpiPending" alignItems="Center" justifyContent="Center"
+                  class="catKpiCard catKpiCard--orange">
+              <Text id="catKpiPendingNum" text="{catalog>/kpi/submitted}" class="catKpiNumber catKpiNumber--orange" />
+              <core:Icon id="catKpiPendingIcon" src="sap-icon://pending" color="#e9730c" size="0.9rem" class="catKpiIconSpacer" />
+              <Text id="catKpiPendingLbl" text="Pending" class="catKpiLabel catKpiLabel--orange" />
+            </VBox>
+
+            <VBox id="catKpiApproved" alignItems="Center" justifyContent="Center"
+                  class="catKpiCard catKpiCard--green">
+              <Text id="catKpiApprovedNum" text="{catalog>/kpi/approved}" class="catKpiNumber catKpiNumber--green" />
+              <core:Icon id="catKpiApprovedIcon" src="sap-icon://accept" color="#107e3e" size="0.9rem" class="catKpiIconSpacer" />
+              <Text id="catKpiApprovedLbl" text="Approved" class="catKpiLabel catKpiLabel--green" />
+            </VBox>
+
+            <VBox id="catKpiRejected" alignItems="Center" justifyContent="Center"
+                  class="catKpiCard catKpiCard--red">
+              <Text id="catKpiRejectedNum" text="{catalog>/kpi/rejected}" class="catKpiNumber catKpiNumber--red" />
+              <core:Icon id="catKpiRejectedIcon" src="sap-icon://decline" color="#bb0000" size="0.9rem" class="catKpiIconSpacer" />
+              <Text id="catKpiRejectedLbl" text="Rejected" class="catKpiLabel catKpiLabel--red" />
+            </VBox>
+
+            <VBox id="catKpiDraft" alignItems="Center" justifyContent="Center"
+                  class="catKpiCard catKpiCard--grey">
+              <Text id="catKpiDraftNum" text="{catalog>/kpi/draft}" class="catKpiNumber catKpiNumber--grey" />
+              <core:Icon id="catKpiDraftIcon" src="sap-icon://edit" color="#6a6d70" size="0.9rem" class="catKpiIconSpacer" />
+              <Text id="catKpiDraftLbl" text="Draft" class="catKpiLabel catKpiLabel--grey" />
+            </VBox>
+
+          </HBox>
+
+        </HBox>
+      </f:DynamicPageHeader>
+    </f:header>
+
+    <!-- ─── Content: Requests Table ─── -->
+    <f:content>
+      <VBox class="sapUiMediumMarginBegin sapUiMediumMarginEnd sapUiSmallMarginTop sapUiMediumMarginBottom">
+
+        <!-- Table Toolbar -->
+        <Toolbar id="catTableToolbar" design="Transparent" class="sapUiSmallMarginBottom">
+          <Title text="Change Requests for this Configuration" level="H4" />
+          <ToolbarSpacer />
+          <SegmentedButton id="catStatusFilter" selectionChange=".onStatusFilterChange">
+            <items>
+              <SegmentedButtonItem text="All" key="ALL" />
+              <SegmentedButtonItem text="Pending" key="SUBMITTED" />
+              <SegmentedButtonItem text="Approved" key="APPROVED" />
+              <SegmentedButtonItem text="Draft" key="DRAFT" />
+            </items>
+          </SegmentedButton>
+          <Button icon="sap-icon://refresh" tooltip="Refresh" press=".onRefresh" type="Transparent" />
+        </Toolbar>
+
+        <!-- Requests Table -->
+        <Table
+          id="catReqTable"
+          items="{catalog>/requests}"
+          noDataText="No requests found for this configuration"
+          growing="true"
+          growingThreshold="10"
+          busyIndicatorDelay="0"
+          busy="{catalog>/loading}">
+          <columns>
+            <Column width="28%"><Text text="Request Title" /></Column>
+            <Column width="16%"><Text text="Status" /></Column>
+            <Column width="10%"><Text text="Environment" /></Column>
+            <Column width="16%"><Text text="Created By" /></Column>
+            <Column width="13%"><Text text="Created On" /></Column>
+            <Column width="17%" hAlign="End"><Text text="Actions" /></Column>
+          </columns>
+          <items>
+            <ColumnListItem type="Active" press=".onRowPress">
+              <cells>
+                <VBox>
+                  <Text text="{catalog>ReqTitle}" maxLines="1" />
+                  <Text text="{catalog>ReqId}" class="sapUiTinyMarginTop catFieldLabel" />
+                </VBox>
+                <ObjectStatus
+                  text="{catalog>StatusText}"
+                  state="{catalog>StatusState}"
+                  icon="{catalog>StatusIcon}" />
+                <Text text="{catalog>EnvId}" />
+                <Text text="{catalog>CreatedBy}" />
+                <Text text="{catalog>CreatedAtText}" />
+                <HBox justifyContent="End">
+                  <Button
+                    text="Open Config"
+                    icon="sap-icon://action"
+                    type="Transparent"
+                    tooltip="Open in Configuration App"
+                    press=".onOpenConfigRow" />
+                  <Button
+                    icon="sap-icon://navigation-right-arrow"
+                    type="Transparent"
+                    tooltip="View Request Detail"
+                    press=".onRowPress" />
+                </HBox>
+              </cells>
+            </ColumnListItem>
+          </items>
+        </Table>
+
+      </VBox>
+    </f:content>
+
+  </f:DynamicPage>
+</mvc:View>
