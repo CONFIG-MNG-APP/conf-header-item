@@ -195,17 +195,6 @@ sap.ui.define(
         }
       },
 
-      onRowPress: function (oEvent) {
-        var oCtx = oEvent.getSource().getBindingContext("catalog");
-        if (!oCtx) {
-          oCtx = oEvent.getSource().getParent().getBindingContext("catalog");
-        }
-        if (!oCtx) return;
-        var sReqId = oCtx.getProperty("ReqId");
-        if (!sReqId) return;
-        window.location.hash = "ZC_CONF_REQ_H(ReqId=" + sReqId + ",IsActiveEntity=true)";
-      },
-
       onOpenConfig: function () {
         // Use the most recent request (first in list, sorted desc)
         var oModel = this.getView().getModel("catalog");

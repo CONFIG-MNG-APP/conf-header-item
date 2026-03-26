@@ -153,7 +153,7 @@
             <Column width="17%" hAlign="End"><Text text="Actions" /></Column>
           </columns>
           <items>
-            <ColumnListItem type="Active" press=".onRowPress">
+            <ColumnListItem type="Inactive">
               <cells>
                 <VBox>
                   <Text text="{catalog>ReqTitle}" maxLines="1" />
@@ -173,11 +173,6 @@
                     type="Transparent"
                     tooltip="Open in Configuration App"
                     press=".onOpenConfigRow" />
-                  <Button
-                    icon="sap-icon://navigation-right-arrow"
-                    type="Transparent"
-                    tooltip="View Request Detail"
-                    press=".onRowPress" />
                 </HBox>
               </cells>
             </ColumnListItem>
