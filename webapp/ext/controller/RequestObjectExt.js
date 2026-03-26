@@ -180,25 +180,21 @@ sap.ui.define(
 
             console.log("onOpenConfig params:", { sReqId, sConfId, sConfName, sModuleId, sTargetCds });
 
-            const oPortMap = {
-              ZI_MM_ROUTE_CONF: "8083",
-              ZI_MM_SAFE_STOCK: "8084",
-              ZI_SD_PRICE_CONF: "8085",
-              ZI_FI_LIMIT_CONF: "8086",
-            };
+            const sMode = localStorage.getItem("conf-mng-nav-mode") ||
+              (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+                ? "local" : "deploy");
+            const sAppBase = sMode === "local"
+              ? "http://localhost:8082/index.html"
+              : window.location.origin + "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html";
 
-            const sPort = oPortMap[sTargetCds] || "8083";
-
-            const sUrl =
-              "http://localhost:" + sPort + "/test/flp.html" +
-              "?sap-ui-xx-viewCache=false" +
+            const sUrl = sAppBase +
+              "?sap-client=" + (new URLSearchParams(window.location.search).get("sap-client") || "324") +
               "&ReqId="    + encodeURIComponent(sReqId) +
               "&ConfId="   + encodeURIComponent(sConfId) +
               "&ConfName=" + encodeURIComponent(sConfName) +
               "&ModuleId=" + encodeURIComponent(sModuleId) +
               "&TargetCds="+ encodeURIComponent(sTargetCds) +
-              "&Status="   + encodeURIComponent(sStatus) +
-              "#app-preview";
+              "&Status="   + encodeURIComponent(sStatus);
 
             console.log("onOpenConfig navigating to:", sUrl);
 

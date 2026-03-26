@@ -9,12 +9,17 @@ sap.ui.define(
       );
     }
 
-    const oPortMap = {
-      ZI_MM_ROUTE_CONF: "8083",
-      ZI_MM_SAFE_STOCK: "8084",
-      ZI_SD_PRICE_CONF: "8085",
-      ZI_FI_LIMIT_CONF: "8086",
-    };
+    // Nav mode: "local" → localhost:8082, "deploy" → BSP path on SAP server
+    // Auto-detect by hostname; override via: localStorage.setItem("conf-mng-nav-mode", "local"/"deploy")
+    function _getMmRoutesAppUrl() {
+      var sMode = localStorage.getItem("conf-mng-nav-mode") ||
+        (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+          ? "local" : "deploy");
+      if (sMode === "local") {
+        return "http://localhost:8082/index.html";
+      }
+      return window.location.origin + "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html";
+    }
 
     async function _getTargetCds(sReqId) {
       try {
@@ -80,26 +85,17 @@ sap.ui.define(
 
           // Lấy TargetCds từ item đầu tiên
           const sTargetCds = await _getTargetCds(sReqId);
-          const sPort = oPortMap[sTargetCds] || "8083";
+          const sAppPath   = _getMmRoutesAppUrl();
 
           const sUrl =
-            "http://localhost:" +
-            sPort +
-            "/test/flp.html" +
-            "?sap-ui-xx-viewCache=false" +
-            "&ReqId=" +
-            encodeURIComponent(sReqId) +
-            "&ConfId=" +
-            encodeURIComponent(sConfId) +
-            "&ConfName=" +
-            encodeURIComponent(sConfName) +
-            "&ModuleId=" +
-            encodeURIComponent(sModuleId) +
-            "&TargetCds=" +
-            encodeURIComponent(sTargetCds) +
-            "&Status=" +
-            encodeURIComponent(sStatus) +
-            "#app-preview";
+            sAppPath +
+            "?sap-client=" + _getSapClient() +
+            "&ReqId="     + encodeURIComponent(sReqId) +
+            "&ConfId="    + encodeURIComponent(sConfId) +
+            "&ConfName="  + encodeURIComponent(sConfName) +
+            "&ModuleId="  + encodeURIComponent(sModuleId) +
+            "&TargetCds=" + encodeURIComponent(sTargetCds) +
+            "&Status="    + encodeURIComponent(sStatus);
 
           console.log("OpenConfigAction navigating to:", sUrl);
 

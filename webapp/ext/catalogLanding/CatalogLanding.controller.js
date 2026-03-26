@@ -13,11 +13,12 @@ sap.ui.define(
       DEPLOYED:    { text: "Deployed",         state: "Success", icon: "sap-icon://upload"      },
     };
 
-    var PORT_MAP = {
-      ZI_MM_ROUTE_CONF: "8083",
-      ZI_MM_SAFE_STOCK: "8084",
-      ZI_SD_PRICE_CONF: "8085",
-      ZI_FI_LIMIT_CONF: "8086",
+    // BSP app paths — works both on ABAP server and local (via proxy)
+    var APP_PATH_MAP = {
+      ZI_MM_ROUTE_CONF: "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html",
+      ZI_MM_SAFE_STOCK: "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html",
+      ZI_SD_PRICE_CONF: "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html",
+      ZI_FI_LIMIT_CONF: "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html",
     };
 
     function _getSapClient() {
@@ -71,10 +72,46 @@ sap.ui.define(
           oModel.setProperty("/ModuleId",  oCatalogCtx.ModuleId  || "");
           oModel.setProperty("/EnvId",     oCatalogCtx.EnvId     || "DEV");
           oModel.setProperty("/TargetCds", oCatalogCtx.TargetCds || "");
-          this._loadRequests(oCatalogCtx.ConfId);
+
+          // Fetch user role first, then load requests with correct filter
+          this._initUserRole().then(function (oUserInfo) {
+            this._loadRequests(oCatalogCtx.ConfId, oUserInfo);
+          }.bind(this));
         } else {
           oModel.setProperty("/loading", false);
         }
+      },
+
+      /**
+       * Fetch current user's role from ZI_CURRENT_USER_ROLE.
+       * Returns { userId, role } — role is trimmed string e.g. 'KEY USER'.
+       */
+      _initUserRole: function () {
+        var sClient = _getSapClient();
+        // Filter bằng IsCurrentUser='X' — backend tự tính dựa trên $session.user
+        // Không cần frontend biết username chính xác
+        var sUrl =
+          "/sap/opu/odata4/sap/zui_conf_req/srvd/sap/zsd_conf_req/0001/" +
+          "ZI_CURRENT_USER_ROLE?$filter=IsCurrentUser eq 'X' and IsActive eq 'X'" +
+          "&sap-client=" + sClient;
+
+        return fetch(sUrl, {
+          credentials: "include",
+          headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" },
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            var aRows = data.value || [];
+            var oActive = aRows[0];
+            var sUserId = oActive ? (oActive.UserId || "").trim() : "";
+            var sRole   = oActive ? (oActive.RoleLevel || "").trim() : "";
+            console.log("[Auth] UserId =", sUserId, "| Role =", sRole);
+            return { userId: sUserId, role: sRole };
+          })
+          .catch(function (err) {
+            console.error("[Auth] Failed to fetch user role:", err);
+            return { userId: "", role: "" };
+          });
       },
 
       _getCatalogCtx: function () {
@@ -98,14 +135,21 @@ sap.ui.define(
         };
       },
 
-      _loadRequests: function (sConfId) {
+      _loadRequests: function (sConfId, oUserInfo) {
         var oModel = this.getView().getModel("catalog");
         oModel.setProperty("/loading", true);
 
         var sClient = _getSapClient();
+        var sFilter = "ConfId eq " + sConfId;
+
+        // KEY USER only sees their own requests
+        if (oUserInfo && oUserInfo.role === "KEY USER" && oUserInfo.userId) {
+          sFilter += " and CreatedBy eq '" + oUserInfo.userId + "'";
+        }
+
         var sUrl = "/sap/opu/odata4/sap/zui_conf_req/srvd/sap/zsd_conf_req/0001/" +
           "ZC_CONF_REQ_H?$select=ReqId,ReqTitle,ModuleId,EnvId,Status,CreatedAt,CreatedBy,ConfId" +
-          "&$filter=ConfId eq " + sConfId +
+          "&$filter=" + sFilter +
           "&$orderby=CreatedAt desc" +
           "&sap-client=" + sClient;
 
@@ -144,7 +188,11 @@ sap.ui.define(
 
       onRefresh: function () {
         var sConfId = this.getView().getModel("catalog").getProperty("/ConfId");
-        if (sConfId) this._loadRequests(sConfId);
+        if (sConfId) {
+          this._initUserRole().then(function (oUserInfo) {
+            this._loadRequests(sConfId, oUserInfo);
+          }.bind(this));
+        }
       },
 
       onRowPress: function (oEvent) {
@@ -155,7 +203,7 @@ sap.ui.define(
         if (!oCtx) return;
         var sReqId = oCtx.getProperty("ReqId");
         if (!sReqId) return;
-        window.location.hash = "#app-preview&/ZC_CONF_REQ_H(" + sReqId + ",IsActiveEntity=true)";
+        window.location.hash = "ZC_CONF_REQ_H(ReqId=" + sReqId + ",IsActiveEntity=true)";
       },
 
       onOpenConfig: function () {
@@ -174,23 +222,30 @@ sap.ui.define(
         this._navigateToConfig(sReqId, sStatus);
       },
 
-      _navigateToConfig: function (sReqId, sStatus) {
-        var oModel = this.getView().getModel("catalog");
-        var sTargetCds = oModel.getProperty("/TargetCds");
-        var sPort = PORT_MAP[sTargetCds] || "8083";
-        var sClient = _getSapClient();
+      _getMmRoutesAppUrl: function () {
+        var sMode = localStorage.getItem("conf-mng-nav-mode") ||
+          (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+            ? "local" : "deploy");
+        if (sMode === "local") {
+          return "http://localhost:8082/index.html";
+        }
+        return window.location.origin + "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html";
+      },
 
-        var sUrl = "http://localhost:" + sPort + "/test/flp.html" +
-          "?sap-ui-xx-viewCache=false" +
-          "&sap-client=" + sClient +
+      _navigateToConfig: function (sReqId, sStatus) {
+        var oModel     = this.getView().getModel("catalog");
+        var sTargetCds = oModel.getProperty("/TargetCds");
+        var sClient    = _getSapClient();
+
+        var sUrl = this._getMmRoutesAppUrl() +
+          "?sap-client=" + sClient +
           "&ReqId="     + encodeURIComponent(sReqId) +
           "&ConfId="    + encodeURIComponent(oModel.getProperty("/ConfId")) +
           "&ConfName="  + encodeURIComponent(oModel.getProperty("/ConfName")) +
           "&ModuleId="  + encodeURIComponent(oModel.getProperty("/ModuleId")) +
           "&TargetCds=" + encodeURIComponent(sTargetCds) +
           "&EnvId="     + encodeURIComponent(oModel.getProperty("/EnvId")) +
-          "&Status="    + encodeURIComponent(sStatus) +
-          "#app-preview";
+          "&Status="    + encodeURIComponent(sStatus);
 
         window.open(sUrl, "_self");
       },

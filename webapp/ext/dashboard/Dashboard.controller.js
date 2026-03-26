@@ -130,8 +130,7 @@ sap.ui.define(
         var sReqId = oCtx.getProperty("ReqId");
         if (!sReqId) return;
 
-        var sHash = "#app-preview&/ZC_CONF_REQ_H(" + sReqId + ",IsActiveEntity=true)";
-        window.location.hash = sHash;
+        window.location.hash = "ZC_CONF_REQ_H(ReqId=" + sReqId + ",IsActiveEntity=true)";
       },
 
       onViewAll: function () {

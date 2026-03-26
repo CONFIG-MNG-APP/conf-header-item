@@ -69,46 +69,40 @@ sap.ui.define(
          * Returns the RoleLevel string (trimmed), or '' if no role found.
          */
         _initUserRole: function () {
-          // Get current user from SAP Fiori shell (sy-uname equivalent on frontend)
-          const sCurrentUser =
-            sap.ushell?.Container?.getService?.("UserInfo")?.getId?.() || "";
-          this._currentUserId = sCurrentUser;
-
-          if (!sCurrentUser) {
-            this._currentUserRole = "";
-            return Promise.resolve("");
-          }
-
+          // Filter bằng IsCurrentUser='X' — backend tự tính dựa $session.user
+          // Không phụ thuộc sap.ushell trả đúng username hay không
           const oModel = this.base.getView().getModel();
           const oBinding = oModel.bindList(
             "/ZI_CURRENT_USER_ROLE",
             undefined,
             undefined,
-            [
-              new Filter("UserId", FilterOperator.EQ, sCurrentUser),
-              new Filter("IsActive", FilterOperator.EQ, true),
-            ],
+            [new Filter("IsCurrentUser", FilterOperator.EQ, "X")],
           );
 
           return oBinding
-            .requestContexts(0, 1)
+            .requestContexts(0, 5)
             .then((aContexts) => {
-              if (aContexts.length > 0) {
-                this._currentUserRole = (
-                  aContexts[0].getProperty("RoleLevel") || ""
-                ).trim();
+              const oActive = aContexts.find((ctx) => {
+                const v = ctx.getProperty("IsActive");
+                return v === true || v === "X";
+              }) || aContexts[0];
+
+              if (oActive) {
+                this._currentUserId   = (oActive.getProperty("UserId")    || "").trim();
+                this._currentUserRole = (oActive.getProperty("RoleLevel") || "").trim();
               } else {
+                this._currentUserId   = "";
                 this._currentUserRole = "";
               }
               console.log(
-                "User role =",
-                this._currentUserRole,
-                "| UserId =",
-                this._currentUserId,
+                "[Auth] UserId =", this._currentUserId,
+                "| Role =", this._currentUserRole,
               );
               return this._currentUserRole;
             })
-            .catch(() => {
+            .catch((err) => {
+              console.error("[Auth] Failed to fetch user role:", err);
+              this._currentUserId   = "";
               this._currentUserRole = "";
               return "";
             });

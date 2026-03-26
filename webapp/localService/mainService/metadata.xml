@@ -116,6 +116,10 @@
                 <Property Name="ApprovedAt" Type="Edm.DateTimeOffset" Precision="7"/>
                 <Property Name="RejectedBy" Type="Edm.String" Nullable="false" MaxLength="12"/>
                 <Property Name="RejectedAt" Type="Edm.DateTimeOffset" Precision="7"/>
+                <Property Name="ConfId" Type="Edm.Guid"/>
+                <Property Name="StatusCriticality" Type="Edm.Byte" Nullable="false"/>
+                <Property Name="ConfName" Type="Edm.String" Nullable="false" MaxLength="100"/>
+                <Property Name="TargetCds" Type="Edm.String" Nullable="false" MaxLength="30"/>
                 <Property Name="HasDraftEntity" Type="Edm.Boolean" Nullable="false"/>
                 <Property Name="DraftEntityCreationDateTime" Type="Edm.DateTimeOffset" Precision="7"/>
                 <Property Name="DraftEntityLastChangeDateTime" Type="Edm.DateTimeOffset" Precision="7"/>
@@ -139,6 +143,9 @@
                 <Property Name="Edit" Type="Edm.Boolean" Nullable="false"/>
                 <Property Name="reject" Type="Edm.Boolean" Nullable="false"/>
                 <Property Name="submit" Type="Edm.Boolean" Nullable="false"/>
+                <Property Name="rollback" Type="Edm.Boolean" Nullable="false"/>
+                <Property Name="promote" Type="Edm.Boolean" Nullable="false"/>
+                <Property Name="updateReason" Type="Edm.Boolean" Nullable="false"/>
             </ComplexType>
             <ComplexType Name="EntityControl">
                 <Property Name="Deletable" Type="Edm.Boolean" Nullable="false"/>
@@ -181,6 +188,19 @@
             </Action>
             <Action Name="submit" EntitySetPath="_it" IsBound="true">
                 <Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_conf_req.v0001.ZC_CONF_REQ_HType" Nullable="false"/>
+                <ReturnType Type="com.sap.gateway.srvd.zsd_conf_req.v0001.ZC_CONF_REQ_HType" Nullable="false"/>
+            </Action>
+            <Action Name="rollback" EntitySetPath="_it" IsBound="true">
+                <Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_conf_req.v0001.ZC_CONF_REQ_HType" Nullable="false"/>
+                <ReturnType Type="com.sap.gateway.srvd.zsd_conf_req.v0001.ZC_CONF_REQ_HType" Nullable="false"/>
+            </Action>
+            <Action Name="promote" EntitySetPath="_it" IsBound="true">
+                <Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_conf_req.v0001.ZC_CONF_REQ_HType" Nullable="false"/>
+                <ReturnType Type="com.sap.gateway.srvd.zsd_conf_req.v0001.ZC_CONF_REQ_HType" Nullable="false"/>
+            </Action>
+            <Action Name="updateReason" EntitySetPath="_it" IsBound="true">
+                <Parameter Name="_it" Type="com.sap.gateway.srvd.zsd_conf_req.v0001.ZC_CONF_REQ_HType" Nullable="false"/>
+                <Parameter Name="reason" Type="Edm.String" MaxLength="256"/>
                 <ReturnType Type="com.sap.gateway.srvd.zsd_conf_req.v0001.ZC_CONF_REQ_HType" Nullable="false"/>
             </Action>
             <EntityContainer Name="Container">
