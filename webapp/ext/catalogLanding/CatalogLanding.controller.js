@@ -13,12 +13,12 @@ sap.ui.define(
       DEPLOYED:    { text: "Deployed",         state: "Success", icon: "sap-icon://upload"      },
     };
 
-    // BSP app paths — works both on ABAP server and local (via proxy)
+    // App paths — auto-detect local vs deployed
     var APP_PATH_MAP = {
-      ZI_MM_ROUTE_CONF: "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html",
-      ZI_MM_SAFE_STOCK: "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html",
-      ZI_SD_PRICE_CONF: "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html",
-      ZI_FI_LIMIT_CONF: "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html",
+      ZI_MM_ROUTE_CONF: { local: "http://localhost:8082/index.html", deploy: "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html" },
+      ZI_SD_PRICE_CONF: { local: "http://localhost:8083/index.html", deploy: "/sap/bc/ui5_ui5/sap/zconfsdprice/index.html" },
+      ZI_FI_LIMIT_CONF: { local: "http://localhost:8084/index.html", deploy: "/sap/bc/ui5_ui5/sap/zconffilimit/index.html" },
+      ZI_MM_SAFE_STOCK: { local: "http://localhost:8085/index.html", deploy: "/sap/bc/ui5_ui5/sap/zconfmmstock/index.html" },
     };
 
     function _getSapClient() {
@@ -211,14 +211,13 @@ sap.ui.define(
         this._navigateToConfig(sReqId, sStatus);
       },
 
-      _getMmRoutesAppUrl: function () {
+      _getConfigAppUrl: function (sTargetCds) {
         var sMode = localStorage.getItem("conf-mng-nav-mode") ||
           (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
             ? "local" : "deploy");
-        if (sMode === "local") {
-          return "http://localhost:8082/index.html";
-        }
-        return window.location.origin + "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html";
+        var oEntry = APP_PATH_MAP[sTargetCds] || APP_PATH_MAP["ZI_MM_ROUTE_CONF"];
+        var sPath = oEntry[sMode] || oEntry.deploy;
+        return sMode === "deploy" ? window.location.origin + sPath : sPath;
       },
 
       _navigateToConfig: function (sReqId, sStatus) {
@@ -226,7 +225,7 @@ sap.ui.define(
         var sTargetCds = oModel.getProperty("/TargetCds");
         var sClient    = _getSapClient();
 
-        var sUrl = this._getMmRoutesAppUrl() +
+        var sUrl = this._getConfigAppUrl(sTargetCds) +
           "?sap-client=" + sClient +
           "&ReqId="     + encodeURIComponent(sReqId) +
           "&ConfId="    + encodeURIComponent(oModel.getProperty("/ConfId")) +

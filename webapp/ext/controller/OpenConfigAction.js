@@ -9,16 +9,21 @@ sap.ui.define(
       );
     }
 
-    // Nav mode: "local" → localhost:8082, "deploy" → BSP path on SAP server
-    // Auto-detect by hostname; override via: localStorage.setItem("conf-mng-nav-mode", "local"/"deploy")
-    function _getMmRoutesAppUrl() {
+    var APP_PATH_MAP = {
+      ZI_MM_ROUTE_CONF: { local: "http://localhost:8082/index.html", deploy: "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html" },
+      ZI_SD_PRICE_CONF: { local: "http://localhost:8083/index.html", deploy: "/sap/bc/ui5_ui5/sap/zconfsdprice/index.html" },
+      ZI_FI_LIMIT_CONF: { local: "http://localhost:8084/index.html", deploy: "/sap/bc/ui5_ui5/sap/zconffilimit/index.html" },
+      ZI_MM_SAFE_STOCK: { local: "http://localhost:8085/index.html", deploy: "/sap/bc/ui5_ui5/sap/zconfmmstock/index.html" },
+    };
+
+    // Nav mode: auto-detect by hostname; override via: localStorage.setItem("conf-mng-nav-mode", "local"/"deploy")
+    function _getConfigAppUrl(sTargetCds) {
       var sMode = localStorage.getItem("conf-mng-nav-mode") ||
         (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
           ? "local" : "deploy");
-      if (sMode === "local") {
-        return "http://localhost:8082/index.html";
-      }
-      return window.location.origin + "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html";
+      var oEntry = APP_PATH_MAP[sTargetCds] || APP_PATH_MAP["ZI_MM_ROUTE_CONF"];
+      var sPath = oEntry[sMode] || oEntry.deploy;
+      return sMode === "deploy" ? window.location.origin + sPath : sPath;
     }
 
     async function _getTargetCds(sReqId) {
@@ -85,7 +90,7 @@ sap.ui.define(
 
           // Lấy TargetCds từ item đầu tiên
           const sTargetCds = await _getTargetCds(sReqId);
-          const sAppPath   = _getMmRoutesAppUrl();
+          const sAppPath   = _getConfigAppUrl(sTargetCds);
 
           const sUrl =
             sAppPath +
