@@ -51,6 +51,7 @@ sap.ui.define(
     return Controller.extend("zgsp26.conf.request.confrequestapp.ext.catalogLanding.CatalogLanding", {
 
       onInit: function () {
+        var sMode = new URLSearchParams(window.location.search).get("Mode") || "";
         var oModel = new JSONModel({
           loading: true,
           ConfId:   "",
@@ -58,6 +59,7 @@ sap.ui.define(
           ModuleId: "",
           EnvId:    "DEV",
           TargetCds: "",
+          showOpenConfig: sMode !== "VIEW_LIST",
           kpi: { total: 0, submitted: 0, approved: 0, rejected: 0, draft: 0 },
           requests: [],
           allRequests: [],
@@ -196,10 +198,10 @@ sap.ui.define(
       },
 
       onOpenConfig: function () {
-        // Use the most recent request (first in list, sorted desc)
-        var oModel = this.getView().getModel("catalog");
+        // Open the most recent request (the draft just created via Maintain via Request)
+        var oModel    = this.getView().getModel("catalog");
         var aRequests = oModel.getProperty("/allRequests") || [];
-        var oFirst = aRequests[0] || {};
+        var oFirst    = aRequests[0] || {};
         this._navigateToConfig(oFirst.ReqId || "", oFirst.Status || "DRAFT");
       },
 
