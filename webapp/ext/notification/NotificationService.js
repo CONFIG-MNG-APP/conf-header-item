@@ -111,8 +111,10 @@ sap.ui.define(
     function _buildNotif(oReq, sPrevStatus) {
       var sLabel     = STATUS_LABEL[oReq.Status] || oReq.Status;
       var sPrevLabel = sPrevStatus ? (STATUS_LABEL[sPrevStatus] || sPrevStatus) : null;
+      // Stable id based on the transition (not Date.now) — prevents duplicates on reload
+      var sTransition = sPrevStatus ? (sPrevStatus + "_TO_" + oReq.Status) : ("INIT_" + oReq.Status);
       return {
-        id:          oReq.ReqId + "_" + oReq.Status + "_" + Date.now(),
+        id:          oReq.ReqId + "_" + sTransition,
         ReqId:       oReq.ReqId,
         EnvId:       oReq.EnvId || "DEV",
         title:       oReq.ReqTitle || oReq.ReqId,
@@ -168,14 +170,22 @@ sap.ui.define(
               // On catchup: if already in an actionable status → notify
               // (user may have missed this while the app was closed)
               if (bInitialCatchup && NOTIFY_STATUSES.indexOf(oReq.Status) !== -1) {
-                aNotifs.unshift(_buildNotif(oReq, null));
+                var oNew = _buildNotif(oReq, null);
+                // Dedup: skip if same stable id already exists
+                if (!aNotifs.some(function (n) { return n.id === oNew.id; })) {
+                  aNotifs.unshift(oNew);
+                }
               }
               return;
             }
 
             // Known request — check for status change
             if (sPrev !== oReq.Status) {
-              aNotifs.unshift(_buildNotif(oReq, sPrev));
+              var oNew = _buildNotif(oReq, sPrev);
+              // Dedup: skip if same stable id already exists
+              if (!aNotifs.some(function (n) { return n.id === oNew.id; })) {
+                aNotifs.unshift(oNew);
+              }
               _mSeen[oReq.ReqId] = oReq.Status;
               bChanged = true;
             }

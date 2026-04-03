@@ -30,12 +30,39 @@
 }
 
 .confNotifItem:hover {
-  background: #f5f5f5;
+  background: #f0f4ff;
 }
 
-/* Unread: blue left border */
-.sapMListItem[data-sap-ui-highlight="Information"] {
-  border-left: 3px solid #0070f2;
+/* Unread item: blue background + stronger left border */
+.confNotifItem--unread {
+  background: #eef4ff !important;
+  border-left: 4px solid #0070f2 !important;
+}
+
+.confNotifItem--unread:hover {
+  background: #ddeaff !important;
+}
+
+/* Read item: normal background, no border accent */
+.confNotifItem--read {
+  background: #fff;
+  border-left: 4px solid transparent;
+  opacity: 0.85;
+}
+
+/* Unread dot indicator */
+.confNotifDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0070f2;
+  flex-shrink: 0;
+  margin-right: 8px;
+  margin-top: 4px;
+}
+
+.confNotifDot--hidden {
+  visibility: hidden;
 }
 
 .confNotifText {
@@ -43,10 +70,21 @@
   min-width: 0;
 }
 
-.confNotifTitle {
+/* Unread: bold title */
+.confNotifTitle--unread {
   font-size: 0.875rem;
-  font-weight: 600;
-  color: #32363a;
+  font-weight: 700;
+  color: #0a0a0a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Read: normal title */
+.confNotifTitle--read {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #6a6d70;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -67,5 +105,16 @@
 .confNotifTime {
   font-size: 0.75rem;
   color: #89919a;
+  white-space: nowrap;
+}
+
+.confNotifNewBadge {
+  font-size: 0.65rem !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  background: #0070f2;
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-top: 3px;
   white-space: nowrap;
 }

@@ -64,32 +64,43 @@ sap.ui.define(
         var oNotifModel = NotificationService.init(sClient);
         this.getView().setModel(oNotifModel, "notif");
 
-        // Sync badge after view renders (DOM not ready in onInit)
-        this.getView().attachAfterRendering(function () {
+        // Sync badge whenever unreadCount changes — use interval as fallback
+        // because attachPropertyChange path matching is unreliable across UI5 versions
+        oNotifModel.attachPropertyChange(function () {
           this._syncBellBadge();
         }, this);
 
-        // Update bell badge whenever unreadCount changes
-        oNotifModel.attachPropertyChange(function (oEvent) {
-          if (oEvent.getParameter("path") === "/unreadCount") {
-            this._syncBellBadge();
-          }
-        }, this);
+        // Fallback: re-sync every 2s to catch any missed updates
+        this._iBadgeTimer = setInterval(function () {
+          this._syncBellBadge();
+        }.bind(this), 2000);
 
         this._loadData();
       },
 
       onExit: function () {
+        if (this._iBadgeTimer) { clearInterval(this._iBadgeTimer); }
         NotificationService.destroy();
       },
 
       // ── Bell badge (CSS-based counter) ───────────────────────────────
       _syncBellBadge: function () {
-        var iCount = this.getView().getModel("notif").getProperty("/unreadCount") || 0;
+        var oNotifModel = this.getView().getModel("notif");
+        if (!oNotifModel) return;
+        var iCount = oNotifModel.getProperty("/unreadCount") || 0;
         var oBell  = this.byId("notifBellBtn");
         if (!oBell) return;
+        // Retry once after tick if DOM not yet mounted (DynamicPageTitle renders late)
         var oDom = oBell.getDomRef();
-        if (!oDom) return;
+        if (!oDom) {
+          setTimeout(function () {
+            var oDom2 = oBell.getDomRef();
+            if (!oDom2) return;
+            oDom2.setAttribute("data-notif-count", iCount > 0 ? (iCount > 99 ? "99+" : String(iCount)) : "");
+            oDom2.classList.toggle("confNotifBellActive", iCount > 0);
+          }, 300);
+          return;
+        }
         oDom.setAttribute("data-notif-count", iCount > 0 ? (iCount > 99 ? "99+" : String(iCount)) : "");
         oDom.classList.toggle("confNotifBellActive", iCount > 0);
       },
@@ -100,17 +111,32 @@ sap.ui.define(
         var oView = this.getView();
         if (!this._oNotifPopover) {
           Fragment.load({
-            id:             oView.getId(),
-            name:           "zgsp26.conf.request.confrequestapp.ext.notification.NotificationPopover",
-            controller:     this,
+            id:         oView.getId(),
+            name:       "zgsp26.conf.request.confrequestapp.ext.notification.NotificationPopover",
+            controller: this,
           }).then(function (oPopover) {
             this._oNotifPopover = oPopover;
             oView.addDependent(oPopover);
             oPopover.openBy(oBtn);
+            this._scrollNotifToTop();
           }.bind(this));
         } else {
           this._oNotifPopover.openBy(oBtn);
+          this._scrollNotifToTop();
         }
+      },
+
+      _scrollNotifToTop: function () {
+        var oList = this.byId("notifList");
+        if (!oList) return;
+        // Wait one tick for the popover DOM to be fully rendered
+        setTimeout(function () {
+          var oDomRef = oList.getDomRef();
+          if (oDomRef) { oDomRef.scrollTop = 0; }
+          // Also scroll the popover's scroll container
+          var oScroller = oList.$().closest(".sapMPopoverCont, .sapMScrollCont")[0];
+          if (oScroller) { oScroller.scrollTop = 0; }
+        }, 50);
       },
 
       onNotifPopoverClose: function () {
@@ -137,9 +163,9 @@ sap.ui.define(
         this._syncBellBadge();
         if (this._oNotifPopover) { this._oNotifPopover.close(); }
         if (sReqId) {
-          var sHash = "ZC_CONF_REQ_H(ReqId=" + sReqId + ",EnvId='" + sEnvId + "',IsActiveEntity=true)";
-          console.log("[Notif] navigate hash:", sHash);
-          window.location.hash = sHash;
+          this.getOwnerComponent().getRouter().navTo("ZC_CONF_REQ_HObjectPage", {
+            key: "ReqId=" + sReqId + ",EnvId='" + sEnvId + "',IsActiveEntity=true",
+          });
         }
       },
 
