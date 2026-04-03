@@ -81,7 +81,7 @@
     },
     "flexEnabled": false,
     "dependencies": {
-      "minUI5Version": "1.108.33",
+      "minUI5Version": "1.120.23",
       "libs": {
         "sap.m": {},
         "sap.ui.core": {},
@@ -96,7 +96,9 @@
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
-          "bundleName": "zgsp26.conf.request.confrequestapp.i18n.i18n"
+          "bundleName": "zgsp26.conf.request.confrequestapp.i18n.i18n",
+          "supportedLocales": [""],
+          "fallbackLocale": ""
         }
       },
       "": {
@@ -116,7 +118,8 @@
     },
     "resources": {
       "css": [
-        { "uri": "ext/catalogLanding/CatalogLanding.css" }
+        { "uri": "ext/catalogLanding/CatalogLanding.css" },
+        { "uri": "ext/notification/Notification.css" }
       ]
     },
     "routing": {
