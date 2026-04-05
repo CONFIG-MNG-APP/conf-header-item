@@ -72,16 +72,13 @@
         "sap.ui.controllerExtensions": {
           "sap.fe.templates.ListReport.ListReportController": {
             "controllerName": "zgsp26.conf.request.confrequestapp.ext.controller.RequestListExt"
-          },
-          "sap.fe.templates.ObjectPage.ObjectPageController": {
-            "controllerName": "zgsp26.conf.request.confrequestapp.ext.controller.RequestObjectExt"
           }
         }
       }
     },
     "flexEnabled": false,
     "dependencies": {
-      "minUI5Version": "1.120.23",
+      "minUI5Version": "1.108.0",
       "libs": {
         "sap.m": {},
         "sap.ui.core": {},
@@ -97,8 +94,8 @@
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
           "bundleName": "zgsp26.conf.request.confrequestapp.i18n.i18n",
-          "supportedLocales": [""],
-          "fallbackLocale": ""
+          "supportedLocales": ["en"],
+          "fallbackLocale": "en"
         }
       },
       "": {
@@ -202,30 +199,11 @@
         "ZC_CONF_REQ_HObjectPage": {
           "type": "Component",
           "id": "ZC_CONF_REQ_HObjectPage",
-          "name": "sap.fe.templates.ObjectPage",
+          "name": "sap.fe.core.fpm",
           "options": {
             "settings": {
-              "editableHeaderContent": false,
-              "contextPath": "/ZC_CONF_REQ_H",
-              "navigation": {
-                "_Items": {
-                  "detail": {
-                    "route": "ZC_CONF_REQ_IObjectPage"
-                  }
-                }
-              },
-              "content": {
-                "header": {
-                  "actions": {
-                    "openConfig": {
-                      "press": "zgsp26.conf.request.confrequestapp.ext.controller.OpenConfigAction.onOpenConfig",
-                      "text": "Open Config",
-                      "enabled": true,
-                      "visible": true
-                    }
-                  }
-                }
-              }
+              "viewName": "zgsp26.conf.request.confrequestapp.ext.requestObject.RequestObject",
+              "contextPath": "/ZC_CONF_REQ_H"
             }
           }
         },
@@ -250,6 +228,11 @@
   "sap.fe": {
     "app": {
       "enableLazyLoading": true
+    },
+    "macros": {
+      "situations": {
+        "enabled": false
+      }
     }
   }
 }
