@@ -67,21 +67,15 @@
     }
   },
   "sap.ui5": {
-     "extends": {
-      "extensions": {
-        "sap.ui.controllerExtensions": {
-          "sap.fe.templates.ListReport.ListReportController": {
-            "controllerName": "zgsp26.conf.request.confrequestapp.ext.controller.RequestListExt"
-          }
-        }
-      }
-    },
     "flexEnabled": false,
     "dependencies": {
       "minUI5Version": "1.108.0",
       "libs": {
         "sap.m": {},
         "sap.ui.core": {},
+        "sap.f": {},
+        "sap.uxap": {},
+        "sap.ui.layout": {},
         "sap.fe.templates": {}
       }
     },
@@ -178,6 +172,7 @@
           "options": {
             "settings": {
               "contextPath": "/ZC_CONF_REQ_H",
+              "controllerExtensions": "zgsp26.conf.request.confrequestapp.ext.controller.RequestListExt",
               "variantManagement": "Page",
               "navigation": {
                 "ZC_CONF_REQ_H": {
