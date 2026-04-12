@@ -2,165 +2,173 @@
   controllerName="zgsp26.conf.request.confrequestapp.ext.requestObject.RequestObject"
   xmlns:mvc="sap.ui.core.mvc"
   xmlns="sap.m"
+  xmlns:f="sap.f"
   xmlns:core="sap.ui.core"
   xmlns:uxap="sap.uxap"
   displayBlock="true">
 
-  <uxap:ObjectPageLayout id="reqObjLayout" busy="{req>/loading}" busyIndicatorDelay="0">
+  <f:DynamicPage id="requestObjectPage" toggleHeaderOnTitleClick="false" headerPinned="true">
 
-    <uxap:headerTitle>
-      <uxap:ObjectPageDynamicHeaderTitle>
-        <uxap:heading>
+    <!-- Title -->
+    <f:title>
+      <f:DynamicPageTitle>
+        <f:heading>
           <VBox>
             <Title text="{req>/ReqTitle}" level="H2" />
             <HBox alignItems="Center" class="sapUiTinyMarginTop">
               <ObjectStatus
                 text="{req>/StatusText}"
                 state="{req>/StatusCriticality}"
-                icon="{req>/StatusIcon}"
-                inverted="true" />
+                icon="{req>/StatusIcon}" />
             </HBox>
           </VBox>
-        </uxap:heading>
-        <uxap:navigationActions>
+        </f:heading>
+        <f:navigationActions>
           <Button icon="sap-icon://nav-back" tooltip="Back" press=".onNavBack" type="Transparent" />
-        </uxap:navigationActions>
-        <uxap:actions>
-          <Button id="btnEdit"     text="Edit"        icon="sap-icon://edit"     type="Transparent" press=".onEdit"      visible="{req>/canEdit}" />
-          <Button id="btnDelete"   text="Delete"      icon="sap-icon://delete"   type="Transparent" press=".onDelete"    visible="{req>/canDelete}" />
-          <Button id="btnApprove"  text="Approve"     icon="sap-icon://accept"   type="Accept"      press=".onApprove"   visible="{req>/canApprove}" />
-          <Button id="btnReject"   text="Reject"      icon="sap-icon://decline"  type="Reject"      press=".onReject"    visible="{req>/canReject}" />
-          <Button id="btnRollback" text="Rollback"    icon="sap-icon://undo"     type="Transparent" press=".onRollback"  visible="{req>/canRollback}" />
-          <Button id="btnOpenCfg"  text="Open Config" icon="sap-icon://action"   type="Emphasized"  press=".onOpenConfig" />
-        </uxap:actions>
-      </uxap:ObjectPageDynamicHeaderTitle>
-    </uxap:headerTitle>
+        </f:navigationActions>
+        <f:actions>
+          <Button id="btnEdit"     text="Edit"     icon="sap-icon://edit"     type="Transparent"  press=".onEdit"     visible="{req>/canEdit}" />
+          <Button id="btnDelete"   text="Delete"   icon="sap-icon://delete"   type="Transparent"  press=".onDelete"   visible="{req>/canDelete}" />
+          <Button id="btnApprove"  text="Approve"  icon="sap-icon://accept"   type="Accept"       press=".onApprove"  visible="{req>/canApprove}" />
+          <Button id="btnReject"   text="Reject"   icon="sap-icon://decline"  type="Reject"       press=".onReject"   visible="{req>/canReject}" />
+          <Button id="btnRollback" text="Rollback" icon="sap-icon://undo"     type="Transparent"  press=".onRollback" visible="{req>/canRollback}" />
+          <Button id="btnOpenCfg"  text="Open Config" icon="sap-icon://action" type="Emphasized"  press=".onOpenConfig" />
+        </f:actions>
+      </f:DynamicPageTitle>
+    </f:title>
 
-    <!-- Status Progress Section -->
-    <uxap:ObjectPageSection id="statusSection" title="Request Progress">
-      <uxap:subSections>
-        <uxap:ObjectPageSubSection>
-          <uxap:blocks>
-            <VBox id="stepperContainer" />
-          </uxap:blocks>
-        </uxap:ObjectPageSubSection>
-      </uxap:subSections>
-    </uxap:ObjectPageSection>
+    <!-- Content -->
+    <f:content>
+      <uxap:ObjectPageLayout id="reqObjLayout" busy="{req>/loading}" busyIndicatorDelay="0">
 
-    <!-- Request Information -->
-    <uxap:ObjectPageSection title="Request Information">
-      <uxap:subSections>
-        <uxap:ObjectPageSubSection>
-          <uxap:blocks>
-            <VBox class="sapUiSmallMargin">
-              <HBox wrap="Wrap">
-                <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
-                  <Label text="Request Title" />
-                  <Text text="{req>/ReqTitle}" />
-                </VBox>
-                <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
-                  <Label text="Reason" />
-                  <Text text="{req>/Reason}" />
-                </VBox>
-                <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
-                  <Label text="Description" />
-                  <Text text="{req>/Description}" wrapping="true" />
-                </VBox>
-              </HBox>
-            </VBox>
-          </uxap:blocks>
-        </uxap:ObjectPageSubSection>
-      </uxap:subSections>
-    </uxap:ObjectPageSection>
+        <!-- Status Progress Section -->
+        <uxap:ObjectPageSection id="statusSection" title="Request Progress">
+          <uxap:subSections>
+            <uxap:ObjectPageSubSection>
+              <uxap:blocks>
+                <VBox id="stepperContainer" />
+              </uxap:blocks>
+            </uxap:ObjectPageSubSection>
+          </uxap:subSections>
+        </uxap:ObjectPageSection>
 
-    <!-- Configuration -->
-    <uxap:ObjectPageSection title="Configuration">
-      <uxap:subSections>
-        <uxap:ObjectPageSubSection>
-          <uxap:blocks>
-            <VBox class="sapUiSmallMargin">
-              <HBox wrap="Wrap">
-                <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
-                  <Label text="Environment" />
-                  <Text text="{req>/EnvId}" />
+        <!-- Request Information -->
+        <uxap:ObjectPageSection title="Request Information">
+          <uxap:subSections>
+            <uxap:ObjectPageSubSection>
+              <uxap:blocks>
+                <VBox class="sapUiSmallMargin">
+                  <HBox wrap="Wrap">
+                    <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                      <Label text="Request Title" />
+                      <Text text="{req>/ReqTitle}" />
+                    </VBox>
+                    <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                      <Label text="Reason" />
+                      <Text text="{req>/Reason}" />
+                    </VBox>
+                    <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                      <Label text="Description" />
+                      <Text text="{req>/Description}" wrapping="true" />
+                    </VBox>
+                  </HBox>
                 </VBox>
-                <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
-                  <Label text="Configuration Name" />
-                  <Text text="{req>/ConfName}" />
-                </VBox>
-                <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
-                  <Label text="Module" />
-                  <Text text="{req>/ModuleId}" />
-                </VBox>
-              </HBox>
-            </VBox>
-          </uxap:blocks>
-        </uxap:ObjectPageSubSection>
-      </uxap:subSections>
-    </uxap:ObjectPageSection>
+              </uxap:blocks>
+            </uxap:ObjectPageSubSection>
+          </uxap:subSections>
+        </uxap:ObjectPageSection>
 
-    <!-- Admin Info -->
-    <uxap:ObjectPageSection title="Admin Info">
-      <uxap:subSections>
-        <uxap:ObjectPageSubSection>
-          <uxap:blocks>
-            <VBox class="sapUiSmallMargin">
-              <HBox wrap="Wrap">
-                <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
-                  <Label text="Created By" /><Text text="{req>/CreatedBy}" />
+        <!-- Configuration -->
+        <uxap:ObjectPageSection title="Configuration">
+          <uxap:subSections>
+            <uxap:ObjectPageSubSection>
+              <uxap:blocks>
+                <VBox class="sapUiSmallMargin">
+                  <HBox wrap="Wrap">
+                    <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                      <Label text="Environment" />
+                      <Text text="{req>/EnvId}" />
+                    </VBox>
+                    <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                      <Label text="Configuration Name" />
+                      <Text text="{req>/ConfName}" />
+                    </VBox>
+                    <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                      <Label text="Module" />
+                      <Text text="{req>/ModuleId}" />
+                    </VBox>
+                  </HBox>
                 </VBox>
-                <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
-                  <Label text="Created At" /><Text text="{req>/CreatedAt}" />
-                </VBox>
-                <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
-                  <Label text="Approved By" /><Text text="{req>/ApprovedBy}" />
-                </VBox>
-                <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
-                  <Label text="Approved At" /><Text text="{req>/ApprovedAt}" />
-                </VBox>
-                <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
-                  <Label text="Rejected By" /><Text text="{req>/RejectedBy}" />
-                </VBox>
-                <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
-                  <Label text="Rejected At" /><Text text="{req>/RejectedAt}" />
-                </VBox>
-              </HBox>
-            </VBox>
-          </uxap:blocks>
-        </uxap:ObjectPageSubSection>
-      </uxap:subSections>
-    </uxap:ObjectPageSection>
+              </uxap:blocks>
+            </uxap:ObjectPageSubSection>
+          </uxap:subSections>
+        </uxap:ObjectPageSection>
 
-    <!-- Request Items -->
-    <uxap:ObjectPageSection title="Request Items">
-      <uxap:subSections>
-        <uxap:ObjectPageSubSection>
-          <uxap:blocks>
-            <Table
-              id="itemsTable"
-              items="{req>/items}"
-              noDataText="No items"
-              busyIndicatorDelay="0"
-              busy="{req>/loadingItems}">
-              <columns>
-                <Column><Text text="Field Name" /></Column>
-                <Column><Text text="Old Value" /></Column>
-                <Column><Text text="New Value" /></Column>
-              </columns>
-              <items>
-                <ColumnListItem>
-                  <cells>
-                    <Text text="{req>FieldName}" />
-                    <Text text="{req>OldValue}" />
-                    <Text text="{req>NewValue}" />
-                  </cells>
-                </ColumnListItem>
-              </items>
-            </Table>
-          </uxap:blocks>
-        </uxap:ObjectPageSubSection>
-      </uxap:subSections>
-    </uxap:ObjectPageSection>
+        <!-- Admin Info -->
+        <uxap:ObjectPageSection title="Admin Info">
+          <uxap:subSections>
+            <uxap:ObjectPageSubSection>
+              <uxap:blocks>
+                <VBox class="sapUiSmallMargin">
+                  <HBox wrap="Wrap">
+                    <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                      <Label text="Created By" /><Text text="{req>/CreatedBy}" />
+                    </VBox>
+                    <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                      <Label text="Created At" /><Text text="{req>/CreatedAt}" />
+                    </VBox>
+                    <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                      <Label text="Approved By" /><Text text="{req>/ApprovedBy}" />
+                    </VBox>
+                    <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                      <Label text="Approved At" /><Text text="{req>/ApprovedAt}" />
+                    </VBox>
+                    <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                      <Label text="Rejected By" /><Text text="{req>/RejectedBy}" />
+                    </VBox>
+                    <VBox width="20rem" class="sapUiSmallMarginEnd sapUiSmallMarginBottom">
+                      <Label text="Rejected At" /><Text text="{req>/RejectedAt}" />
+                    </VBox>
+                  </HBox>
+                </VBox>
+              </uxap:blocks>
+            </uxap:ObjectPageSubSection>
+          </uxap:subSections>
+        </uxap:ObjectPageSection>
 
-  </uxap:ObjectPageLayout>
+        <!-- Request Items -->
+        <uxap:ObjectPageSection title="Request Items">
+          <uxap:subSections>
+            <uxap:ObjectPageSubSection>
+              <uxap:blocks>
+                <Table
+                  id="itemsTable"
+                  items="{req>/items}"
+                  noDataText="No items"
+                  busyIndicatorDelay="0"
+                  busy="{req>/loadingItems}">
+                  <columns>
+                    <Column><Text text="Field Name" /></Column>
+                    <Column><Text text="Old Value" /></Column>
+                    <Column><Text text="New Value" /></Column>
+                  </columns>
+                  <items>
+                    <ColumnListItem>
+                      <cells>
+                        <Text text="{req>FieldName}" />
+                        <Text text="{req>OldValue}" />
+                        <Text text="{req>NewValue}" />
+                      </cells>
+                    </ColumnListItem>
+                  </items>
+                </Table>
+              </uxap:blocks>
+            </uxap:ObjectPageSubSection>
+          </uxap:subSections>
+        </uxap:ObjectPageSection>
+
+      </uxap:ObjectPageLayout>
+    </f:content>
+
+  </f:DynamicPage>
 </mvc:View>
