@@ -33,7 +33,16 @@ sap.ui.define(
     ].join("");
 
     var _aStatusOrder = ["DRAFT", "SUBMITTED", "APPROVED", "PROMOTED"];
-    var _mLabel = { DRAFT: "Draft", SUBMITTED: "Submitted", APPROVED: "Approved", PROMOTED: "Promoted", REJECTED: "Rejected" };
+    var _mLabel = {
+      DRAFT:       "Draft",
+      SUBMITTED:   "Pending Approval",
+      APPROVED:    "Approved",
+      PROMOTED:    "Promoted",
+      REJECTED:    "Rejected",
+      ROLLED_BACK: "Rolled Back",
+      ACTIVE:      "Active",
+      DEPLOYED:    "Deployed",
+    };
 
     var APP_PATH_MAP = {
       ZI_MM_ROUTE_CONF: { local: "http://localhost:8082/index.html", deploy: "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html" },
@@ -90,13 +99,31 @@ sap.ui.define(
     }
 
     function _statusToState(sStatus) {
-      var m = { DRAFT: "None", SUBMITTED: "Warning", APPROVED: "Success", PROMOTED: "Success", REJECTED: "Error" };
+      var m = {
+        DRAFT:       "None",
+        SUBMITTED:   "Warning",
+        APPROVED:    "Success",
+        PROMOTED:    "Success",
+        REJECTED:    "Error",
+        ROLLED_BACK: "Warning",
+        ACTIVE:      "Success",
+        DEPLOYED:    "Success",
+      };
       return m[sStatus] || "None";
     }
 
     function _statusToIcon(sStatus) {
-      var m = { DRAFT: "sap-icon://edit", SUBMITTED: "sap-icon://pending", APPROVED: "sap-icon://accept", PROMOTED: "sap-icon://sys-enter-2", REJECTED: "sap-icon://error" };
-      return m[sStatus] || "";
+      var m = {
+        DRAFT:       "sap-icon://edit",
+        SUBMITTED:   "sap-icon://pending",
+        APPROVED:    "sap-icon://accept",
+        PROMOTED:    "sap-icon://sys-enter-2",
+        REJECTED:    "sap-icon://error",
+        ROLLED_BACK: "sap-icon://undo",
+        ACTIVE:      "sap-icon://sys-enter-2",
+        DEPLOYED:    "sap-icon://upload",
+      };
+      return m[sStatus] || "sap-icon://status-inactive";
     }
 
     return Controller.extend("zgsp26.conf.request.confrequestapp.ext.requestObject.RequestObject", {
