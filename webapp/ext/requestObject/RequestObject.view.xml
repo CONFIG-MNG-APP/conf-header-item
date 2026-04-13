@@ -32,7 +32,6 @@
           <Button id="btnReject"   text="Reject"      icon="sap-icon://decline"  type="Reject"      press=".onReject"    visible="{req>/canReject}" />
           <Button id="btnRollback"   text="Rollback"         icon="sap-icon://undo"     type="Transparent" press=".onRollback"       visible="{req>/canRollback}" />
           <Button id="btnOpenCfg"  text="Open Config"      icon="sap-icon://action"   type="Emphasized"  press=".onOpenConfig"     visible="{req>/canOpenConfig}" />
-          <Button id="btnChangelog" text="Config Changelog" icon="sap-icon://history"  type="Default"     press=".onShowChangelog"  visible="{req>/hasReqId}" />
         </uxap:actions>
       </uxap:ObjectPageDynamicHeaderTitle>
     </uxap:headerTitle>
