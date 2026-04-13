@@ -10,8 +10,13 @@ sap.ui.define(
     "sap/ui/core/Icon",
     "sap/m/MessageStrip",
     "sap/ui/core/routing/HashChanger",
+    "sap/m/Dialog",
+    "sap/m/Button",
+    "sap/m/ScrollContainer",
+    "sap/m/ObjectStatus",
+    "sap/m/Label",
   ],
-  function (Controller, JSONModel, MessageBox, MessageToast, VBox, HBox, Text, Icon, MessageStrip, HashChanger) {
+  function (Controller, JSONModel, MessageBox, MessageToast, VBox, HBox, Text, Icon, MessageStrip, HashChanger, Dialog, Button, ScrollContainer, ObjectStatus, Label) {
     "use strict";
 
     // ── Status stepper CSS ────────────────────────────────────────────────────
@@ -52,6 +57,49 @@ sap.ui.define(
     };
 
     var SERVICE_BASE = "/sap/opu/odata4/sap/zui_conf_req/srvd/sap/zsd_conf_req/0001/";
+
+    var _CHANGELOG_SERVICES = {
+      MM: {
+        reqUrl: "/sap/opu/odata4/sap/zui_mm_route_conf/srvd/sap/zsd_mm_route_conf/0001/MMRouteConf",
+        keyFields:  ["PlantId", "SendWh", "ReceiveWh"],
+        oldKeyMap:  { PlantId: "OldPlantId", SendWh: "OldSendWh", ReceiveWh: "OldReceiveWh" },
+        diffFields: [
+          { field: "TransMode",   old: "OldTransMode"   },
+          { field: "IsAllowed",   old: "OldIsAllowed"   },
+          { field: "InspectorId", old: "OldInspectorId" },
+        ],
+      },
+      MMSS: {
+        reqUrl: "/sap/opu/odata4/sap/zui_mm_safe_stock/srvd/sap/zsd_mm_safe_stock/0001/MMSafeStock",
+        keyFields:  ["PlantId", "MatGroup"],
+        oldKeyMap:  { PlantId: "OldPlantId", MatGroup: "OldMatGroup" },
+        diffFields: [
+          { field: "MinQty", old: "OldMinQty" },
+        ],
+      },
+      FI: {
+        reqUrl: "/sap/opu/odata4/sap/zui_fi_limit_conf/srvd/sap/zsd_fi_limit_conf/0001/FILimitConf",
+        keyFields:  ["ExpenseType", "GlAccount"],
+        oldKeyMap:  { ExpenseType: "OldExpenseType", GlAccount: "OldGlAccount" },
+        diffFields: [
+          { field: "AutoApprLim", old: "OldAutoApprLim" },
+          { field: "Currency",    old: "OldCurrency"    },
+        ],
+      },
+      SD: {
+        reqUrl: "/sap/opu/odata4/sap/zsd_sd_price_conf/srvd/sap/zsd_sd_price_conf/0001/SDPriceConf",
+        keyFields:  ["BranchId", "CustGroup", "MaterialGrp"],
+        oldKeyMap:  { BranchId: "OldBranchId", CustGroup: "OldCustGroup", MaterialGrp: "OldMaterialGrp" },
+        diffFields: [
+          { field: "MaxDiscount", old: "OldMaxDiscount" },
+          { field: "MinOrderVal", old: "OldMinOrderVal" },
+          { field: "ApproverGrp", old: "OldApproverGrp" },
+          { field: "Currency",    old: "OldCurrency"    },
+          { field: "ValidFrom",   old: "OldValidFrom"   },
+          { field: "ValidTo",     old: "OldValidTo"     },
+        ],
+      },
+    };
 
     function _getSapClient() {
       return new URLSearchParams(window.location.search).get("sap-client") || "324";
@@ -130,14 +178,14 @@ sap.ui.define(
 
       onInit: function () {
         var oModel = new JSONModel({
-          loading: true, loadingItems: false,
+          loading: true,
           ReqId: "", EnvId: "", ConfId: "", ModuleId: "", ReqTitle: "Loading...",
           Description: "", Status: "", StatusText: "–", StatusCriticality: "None", StatusIcon: "",
           Reason: "", RejectReason: "", ConfName: "", TargetCds: "",
           CreatedBy: "–", CreatedAt: "–", ApprovedBy: "–", ApprovedAt: "–",
           RejectedBy: "–", RejectedAt: "–", ChangedBy: "–", ChangedAt: "–",
           canEdit: false, canDelete: false, canApprove: false, canReject: false, canRollback: false,
-          items: [],
+          canOpenConfig: false, hasReqId: false,
         });
         this.getView().setModel(oModel, "req");
 
@@ -222,14 +270,15 @@ sap.ui.define(
               ApprovedBy: d.ApprovedBy || "–", ApprovedAt: _fmt(d.ApprovedAt),
               RejectedBy: d.RejectedBy || "–", RejectedAt: _fmt(d.RejectedAt),
               ChangedBy: d.ChangedBy || "–", ChangedAt: _fmt(d.ChangedAt),
-              canEdit:     (bIsKeyUser || bIsAdmin) && sStatus === "DRAFT",
-              canDelete:   (bIsKeyUser || bIsAdmin) && sStatus === "DRAFT",
-              canApprove:  bIsManager && sStatus === "SUBMITTED",
-              canReject:   bIsManager && sStatus === "SUBMITTED",
-              canRollback: bIsAdmin && (sStatus === "APPROVED" || sStatus === "PROMOTED"),
+              canEdit:        (bIsKeyUser || bIsAdmin) && sStatus === "DRAFT",
+              canDelete:      (bIsKeyUser || bIsAdmin) && sStatus === "DRAFT",
+              canApprove:     bIsManager && sStatus === "SUBMITTED",
+              canReject:      bIsManager && sStatus === "SUBMITTED",
+              canRollback:    bIsAdmin && (sStatus === "APPROVED" || sStatus === "PROMOTED"),
+              canOpenConfig:  sStatus === "DRAFT",
+              hasReqId:       !!d.ReqId,
             }));
             that._buildStepper(d);
-            that._loadItems(d.ReqId, d.EnvId);
           })
           .catch(function (e) {
             oModel.setProperty("/loading", false);
@@ -237,27 +286,157 @@ sap.ui.define(
           });
       },
 
-      _loadItems: function (sReqId, sEnvId) {
-        var oModel  = this.getView().getModel("req");
-        var sClient = _getSapClient();
-        oModel.setProperty("/loadingItems", true);
+      // ── Config Changelog ──────────────────────────────────────────────────────
 
-        var sUrl =
-          SERVICE_BASE +
-          "ZC_CONF_REQ_H(ReqId=" + sReqId + ",EnvId='" + sEnvId + "')/_Items" +
-          "?$select=FieldName,OldValue,NewValue" +
-          "&sap-client=" + sClient;
+      onShowChangelog: function () {
+        var oData = this.getView().getModel("req").getData();
+        if (!oData.ReqId) { return; }
 
-        fetch(sUrl, {
-          credentials: "include",
-          headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" },
-        })
-          .then(function (r) { return r.json(); })
-          .then(function (data) {
-            oModel.setProperty("/items", data.value || []);
-            oModel.setProperty("/loadingItems", false);
+        var that    = this;
+        var oView   = this.getView();
+        var oDialog = new Dialog({
+          title: "Config Changelog",
+          contentWidth: "640px",
+          contentHeight: "480px",
+          endButton: new Button({
+            text: "Close",
+            press: function () { oDialog.close(); oDialog.destroy(); },
+          }),
+          content: [new Text({ text: "Loading…" }).addStyleClass("sapUiSmallMargin")],
+        });
+        oView.addDependent(oDialog);
+        oDialog.open();
+
+        that._fetchConfigLines(oData.ReqId, oData.ModuleId)
+          .then(function (aRows) {
+            oDialog.destroyContent();
+            if (!aRows.length) {
+              oDialog.addContent(new Text({ text: "No configuration changes found." }).addStyleClass("sapUiSmallMargin"));
+              return;
+            }
+            var oContent = that._buildChangelogContent(aRows);
+            oDialog.addContent(new ScrollContainer({ height: "100%", vertical: true, content: [oContent] }));
           })
-          .catch(function () { oModel.setProperty("/loadingItems", false); });
+          .catch(function (e) {
+            oDialog.destroyContent();
+            oDialog.addContent(new Text({ text: "Failed to load changelog: " + e.message }).addStyleClass("sapUiSmallMargin"));
+          });
+      },
+
+      _fetchConfigLines: function (sReqId, sModuleId) {
+        var that  = this;
+        var aKeys = sModuleId ? [sModuleId] : Object.keys(_CHANGELOG_SERVICES);
+        var aFetches = aKeys.map(function (sKey) {
+          var oSvc = _CHANGELOG_SERVICES[sKey];
+          if (!oSvc) { return Promise.resolve(null); }
+          var sUrl = oSvc.reqUrl + "?$filter=" + encodeURIComponent("ReqId eq " + sReqId);
+          return fetch(sUrl, {
+            credentials: "include",
+            headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" },
+          }).then(function (r) {
+            if (!r.ok) { return null; }
+            return r.json().then(function (d) {
+              var aItems = d.value || [];
+              if (!aItems.length) { return null; }
+              return { svc: oSvc, items: aItems };
+            });
+          }).catch(function () { return null; });
+        });
+
+        return Promise.all(aFetches).then(function (aResults) {
+          var oFound = aResults.find(function (r) { return r !== null; });
+          if (!oFound) { return []; }
+          return that._normalizeLines(oFound.items, oFound.svc);
+        });
+      },
+
+      _normalizeLines: function (aItems, oSvc) {
+        var aRows = [];
+        aItems.forEach(function (oItem) {
+          var sKeyInfo = oSvc.keyFields
+            .map(function (f) { return oItem[f] || "–"; })
+            .join(" / ");
+
+          var sActionType = (oItem.ActionType || "").toUpperCase();
+          var sRowType = "UNCHANGED";
+          if      (sActionType === "C") { sRowType = "ADDED"; }
+          else if (sActionType === "X") { sRowType = "DELETED"; }
+          else if (sActionType === "U") { sRowType = "MODIFIED"; }
+
+          var aFields = oSvc.diffFields.map(function (d) {
+            var sOld = oItem[d.old]   != null ? String(oItem[d.old])   : "";
+            var sNew = oItem[d.field] != null ? String(oItem[d.field]) : "";
+            return { field: d.field, oldVal: sOld, newVal: sNew, changed: sOld !== sNew };
+          });
+
+          if (!sActionType) {
+            var bAnyChanged  = aFields.some(function (f) { return f.changed; });
+            var bAllOldEmpty = aFields.every(function (f) { return !f.oldVal || f.oldVal === "false" || f.oldVal === "0"; });
+            var bAllNewEmpty = aFields.every(function (f) { return !f.newVal || f.newVal === "false" || f.newVal === "0"; });
+            if (bAnyChanged) {
+              if (bAllOldEmpty)      { sRowType = "ADDED"; }
+              else if (bAllNewEmpty) { sRowType = "DELETED"; }
+              else                   { sRowType = "MODIFIED"; }
+            }
+          }
+
+          aRows.push({ keyInfo: sKeyInfo, rowType: sRowType, fields: aFields });
+        });
+        return aRows;
+      },
+
+      _buildChangelogContent: function (aRows) {
+        var mBadge = {
+          ADDED:     { text: "CREATE",   state: "Success" },
+          MODIFIED:  { text: "UPDATE",   state: "Warning" },
+          DELETED:   { text: "DELETE",   state: "Error"   },
+          UNCHANGED: { text: "UNCHANGED",state: "None"    },
+        };
+
+        var oOuterVBox = new VBox().addStyleClass("sapUiSmallMargin");
+
+        aRows.forEach(function (oRow, iIdx) {
+          var oBadgeCfg = mBadge[oRow.rowType] || mBadge.UNCHANGED;
+
+          // Row header: badge + key info
+          var oHeader = new HBox({
+            alignItems: "Center",
+            items: [
+              new ObjectStatus({ text: oBadgeCfg.text, state: oBadgeCfg.state, inverted: true }),
+              new Text({ text: oRow.keyInfo }).addStyleClass("sapUiSmallMarginBegin"),
+            ],
+          }).addStyleClass("sapUiTinyMarginBottom");
+
+          // Field changes
+          var aFieldItems = [oHeader];
+          oRow.fields.forEach(function (oField) {
+            var sOld = oField.oldVal || "–";
+            var sNew = oField.newVal || "–";
+            var sDisplay = oField.changed
+              ? oField.field + ":  " + sOld + "  →  " + sNew
+              : oField.field + ":  " + sNew;
+
+            var oFieldText = new Text({ text: sDisplay, wrapping: false });
+            if (oField.changed) { oFieldText.addStyleClass("sapThemeHighlight-asColor"); }
+            aFieldItems.push(
+              new HBox({ items: [new Label({ text: " " }), oFieldText] })
+                .addStyleClass("sapUiTinyMarginBegin")
+            );
+          });
+
+          var oRowVBox = new VBox({ items: aFieldItems })
+            .addStyleClass("sapUiSmallMarginBottom");
+
+          // Separator between rows
+          if (iIdx > 0) {
+            oOuterVBox.addItem(
+              new HBox({}).addStyleClass("sapUiSmallMarginBottom")
+            );
+          }
+          oOuterVBox.addItem(oRowVBox);
+        });
+
+        return oOuterVBox;
       },
 
       // ── Stepper ───────────────────────────────────────────────────────────────
