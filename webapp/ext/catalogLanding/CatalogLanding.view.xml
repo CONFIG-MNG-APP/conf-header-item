@@ -194,6 +194,7 @@
                     icon="sap-icon://history"
                     type="Default"
                     tooltip="View configuration change history"
+                    visible="{= ${catalog>Status} !== 'DRAFT'}"
                     press=".onShowChangelogRow" />
                 </HBox>
               </cells>
