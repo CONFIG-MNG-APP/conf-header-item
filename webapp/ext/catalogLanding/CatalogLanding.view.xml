@@ -185,8 +185,8 @@
                     text="Config"
                     icon="sap-icon://action"
                     type="Emphasized"
-                    tooltip="Open in Configuration App (Draft only)"
-                    visible="{= ${catalog>Status} === 'DRAFT'}"
+                    tooltip="Open in Configuration App"
+                    visible="{= ${catalog>Status} === 'DRAFT' || ${catalog>Status} === 'REJECTED'}"
                     class="sapUiTinyMarginEnd"
                     press=".onOpenConfigRow" />
                   <Button
@@ -194,7 +194,7 @@
                     icon="sap-icon://history"
                     type="Default"
                     tooltip="View configuration change history"
-                    visible="{= ${catalog>Status} !== 'DRAFT'}"
+                    visible="{= ${catalog>Status} !== 'DRAFT' &amp;&amp; ${catalog>Status} !== 'REJECTED'}"
                     press=".onShowChangelogRow" />
                 </HBox>
               </cells>

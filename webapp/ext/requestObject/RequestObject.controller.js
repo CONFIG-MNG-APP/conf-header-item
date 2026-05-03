@@ -222,12 +222,12 @@ sap.ui.define(
               ApprovedBy: d.ApprovedBy || "–", ApprovedAt: _fmt(d.ApprovedAt),
               RejectedBy: d.RejectedBy || "–", RejectedAt: _fmt(d.RejectedAt),
               ChangedBy: d.ChangedBy || "–", ChangedAt: _fmt(d.ChangedAt),
-              canEdit:        (bIsKeyUser || bIsAdmin) && sStatus === "DRAFT",
+              canEdit:        (bIsKeyUser || bIsAdmin) && (sStatus === "DRAFT" || sStatus === "REJECTED"),
               canDelete:      (bIsKeyUser || bIsAdmin) && sStatus === "DRAFT",
               canApprove:     bIsManager && sStatus === "SUBMITTED",
               canReject:      bIsManager && sStatus === "SUBMITTED",
               canRollback:    bIsAdmin && (sStatus === "APPROVED" || sStatus === "PROMOTED"),
-              canOpenConfig:  sStatus === "DRAFT",
+              canOpenConfig:  sStatus === "DRAFT" || sStatus === "REJECTED",
               hasReqId:       !!d.ReqId,
             }));
             that._buildStepper(d);
