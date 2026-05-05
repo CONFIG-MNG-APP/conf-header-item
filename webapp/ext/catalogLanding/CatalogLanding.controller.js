@@ -32,12 +32,18 @@ sap.ui.define(
       DEPLOYED:    { text: "Deployed",         state: "Success", icon: "sap-icon://upload"      },
     };
 
-    // App paths — auto-detect local vs deployed
-    var APP_PATH_MAP = {
-      ZI_MM_ROUTE_CONF: { local: "http://localhost:8082/index.html", deploy: "/sap/bc/ui5_ui5/sap/zconfmmroute/index.html" },
-      ZI_SD_PRICE_CONF: { local: "http://localhost:8083/index.html", deploy: "/sap/bc/ui5_ui5/sap/zconfsdprice/index.html" },
-      ZI_FI_LIMIT_CONF: { local: "http://localhost:8084/index.html", deploy: "/sap/bc/ui5_ui5/sap/zconffillimit/index.html" },
-      ZI_MM_SAFE_STOCK: { local: "http://localhost:8085/index.html", deploy: "/sap/bc/ui5_ui5/sap/zui_mm_safestk/index.html" },
+    var CDS_SEMANTIC_MAP = {
+      ZI_MM_ROUTE_CONF: { object: "MMRoute",     action: "manage"   },
+      ZI_SD_PRICE_CONF: { object: "SDPrice",     action: "manage"   },
+      ZI_FI_LIMIT_CONF: { object: "FILimit",     action: "manage"   },
+      ZI_MM_SAFE_STOCK: { object: "MMSafeStock", action: "maintain" },
+    };
+
+    var LOCAL_PATH_MAP = {
+      ZI_MM_ROUTE_CONF: "http://localhost:8082/index.html",
+      ZI_SD_PRICE_CONF: "http://localhost:8083/index.html",
+      ZI_FI_LIMIT_CONF: "http://localhost:8084/index.html",
+      ZI_MM_SAFE_STOCK: "http://localhost:8085/index.html",
     };
 
     var CATALOG_APP = { local: "http://localhost:8080/index.html", deploy: "/sap/bc/ui5_ui5/sap/zconfmngcat/index.html" };
@@ -346,31 +352,35 @@ sap.ui.define(
         this._navigateToConfig(sReqId, sStatus);
       },
 
-      _getConfigAppUrl: function (sTargetCds) {
-        var sMode = localStorage.getItem("conf-mng-nav-mode") ||
-          (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-            ? "local" : "deploy");
-        var oEntry = APP_PATH_MAP[sTargetCds] || APP_PATH_MAP["ZI_MM_ROUTE_CONF"];
-        var sPath = oEntry[sMode] || oEntry.deploy;
-        return sMode === "deploy" ? window.location.origin + sPath : sPath;
-      },
-
       _navigateToConfig: function (sReqId, sStatus) {
         var oModel     = this.getView().getModel("catalog");
         var sTargetCds = oModel.getProperty("/TargetCds");
-        var sClient    = _getSapClient();
+        var oSemantic  = CDS_SEMANTIC_MAP[sTargetCds] || CDS_SEMANTIC_MAP["ZI_MM_ROUTE_CONF"];
+        var oParams    = {
+          "sap-client": _getSapClient(),
+          ReqId:    sReqId,
+          ConfId:   oModel.getProperty("/ConfId"),
+          ConfName: oModel.getProperty("/ConfName"),
+          ModuleId: oModel.getProperty("/ModuleId"),
+          TargetCds: sTargetCds,
+          EnvId:    oModel.getProperty("/EnvId"),
+          Status:   sStatus,
+        };
 
-        var sUrl = this._getConfigAppUrl(sTargetCds) +
-          "?sap-client=" + sClient +
-          "&ReqId="     + encodeURIComponent(sReqId) +
-          "&ConfId="    + encodeURIComponent(oModel.getProperty("/ConfId")) +
-          "&ConfName="  + encodeURIComponent(oModel.getProperty("/ConfName")) +
-          "&ModuleId="  + encodeURIComponent(oModel.getProperty("/ModuleId")) +
-          "&TargetCds=" + encodeURIComponent(sTargetCds) +
-          "&EnvId="     + encodeURIComponent(oModel.getProperty("/EnvId")) +
-          "&Status="    + encodeURIComponent(sStatus);
-
-        window.open(sUrl, "_self");
+        var oCrossNav = sap.ushell && sap.ushell.Container &&
+          sap.ushell.Container.getService("CrossApplicationNavigation");
+        if (oCrossNav) {
+          oCrossNav.toExternal({
+            target: { semanticObject: oSemantic.object, action: oSemantic.action },
+            params: oParams,
+          });
+        } else {
+          var sBase  = LOCAL_PATH_MAP[sTargetCds] || "http://localhost:8082/index.html";
+          var sQuery = Object.keys(oParams).map(function (k) {
+            return encodeURIComponent(k) + "=" + encodeURIComponent(oParams[k]);
+          }).join("&");
+          window.open(sBase + "?" + sQuery, "_self");
+        }
       },
 
       // ── Config Changelog ──────────────────────────────────────────────────────
