@@ -4,9 +4,10 @@ sap.ui.define(
     "sap/ui/model/json/JSONModel",
     "sap/m/MessageToast",
     "sap/ui/core/Fragment",
+    "sap/ui/core/routing/HashChanger",
     "zgsp26/conf/request/confrequestapp/ext/notification/NotificationService",
   ],
-  function (Controller, JSONModel, MessageToast, Fragment, NotificationService) {
+  function (Controller, JSONModel, MessageToast, Fragment, HashChanger, NotificationService) {
     "use strict";
 
     var STATUS_MAP = {
@@ -50,6 +51,14 @@ sap.ui.define(
     return Controller.extend("zgsp26.conf.request.confrequestapp.ext.dashboard.Dashboard", {
 
       onInit: function () {
+        // If navigated here with a ConfId (from Catalog app), redirect to CatalogLanding route
+        var sConfId = this._getConfIdParam();
+        if (sConfId) {
+          this.getView().setVisible(false);
+          HashChanger.getInstance().setHash("catalog");
+          return;
+        }
+
         var oModel = new JSONModel({
           loading: true,
           kpi: { total: 0, submitted: 0, approved: 0, rejected: 0, draft: 0 },
@@ -76,6 +85,21 @@ sap.ui.define(
         }.bind(this), 2000);
 
         this._loadData();
+      },
+
+      _getConfIdParam: function () {
+        try {
+          var oComp = this.getOwnerComponent && this.getOwnerComponent();
+          var oCD   = oComp && oComp.getComponentData && oComp.getComponentData();
+          if (oCD && oCD.startupParameters && oCD.startupParameters.ConfId) {
+            return oCD.startupParameters.ConfId[0] || "";
+          }
+        } catch (e) { /* ignore */ }
+        var sHash = window.location.hash;
+        if (sHash.indexOf("?") > -1) {
+          return new URLSearchParams(sHash.substring(sHash.indexOf("?"))).get("ConfId") || "";
+        }
+        return new URLSearchParams(window.location.search).get("ConfId") || "";
       },
 
       onExit: function () {

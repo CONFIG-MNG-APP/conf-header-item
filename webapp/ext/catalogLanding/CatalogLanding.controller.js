@@ -100,7 +100,14 @@ sap.ui.define(
     }
 
     function _getSapClient() {
-      return new URLSearchParams(window.location.search).get("sap-client") || "324";
+      var oSearch = new URLSearchParams(window.location.search);
+      if (oSearch.get("sap-client")) { return oSearch.get("sap-client"); }
+      var sHash = window.location.hash;
+      if (sHash.indexOf("?") > -1) {
+        var oHash = new URLSearchParams(sHash.substring(sHash.indexOf("?")));
+        if (oHash.get("sap-client")) { return oHash.get("sap-client"); }
+      }
+      return "324";
     }
 
     function _formatDate(sVal) {
@@ -129,7 +136,9 @@ sap.ui.define(
     return Controller.extend("zgsp26.conf.request.confrequestapp.ext.catalogLanding.CatalogLanding", {
 
       onInit: function () {
-        var sMode = new URLSearchParams(window.location.search).get("Mode") || "";
+        // Read context first so Mode is available for showOpenConfig
+        var oCatalogCtx = this._getCatalogCtx();
+        var sMode = oCatalogCtx.Mode || "";
         var oModel = new JSONModel({
           loading: true,
           ConfId:   "",
@@ -148,8 +157,6 @@ sap.ui.define(
         var oNotifModel = NotificationService.init(_getSapClient());
         this.getView().setModel(oNotifModel, "notif");
 
-        // Read catalog context from AppComponent
-        var oCatalogCtx = this._getCatalogCtx();
         if (oCatalogCtx && oCatalogCtx.ConfId) {
           oModel.setProperty("/ConfId",    oCatalogCtx.ConfId);
           oModel.setProperty("/ConfName",  oCatalogCtx.ConfName  || "Configuration");
@@ -246,7 +253,27 @@ sap.ui.define(
       },
 
       _getCatalogCtx: function () {
-        // Try AppComponent model first
+        // 1. FLP startup parameters (CrossApplicationNavigation delivers params here)
+        try {
+          var oComp = this.getOwnerComponent && this.getOwnerComponent();
+          var oCD   = oComp && oComp.getComponentData && oComp.getComponentData();
+          if (oCD && oCD.startupParameters) {
+            var oSP = oCD.startupParameters;
+            var _sp = function (k) { return (oSP[k] && oSP[k][0]) || ""; };
+            if (_sp("ConfId")) {
+              return {
+                ConfId:    _sp("ConfId"),
+                ConfName:  _sp("ConfName"),
+                ModuleId:  _sp("ModuleId"),
+                EnvId:     _sp("EnvId") || "DEV",
+                TargetCds: _sp("TargetCds"),
+                Mode:      _sp("Mode"),
+              };
+            }
+          }
+        } catch (e) { /* ignore */ }
+
+        // 2. AppComponent model (FPM internal wiring)
         try {
           var oAppComp = this.getOwnerComponent().getAppComponent
             ? this.getOwnerComponent().getAppComponent()
@@ -255,7 +282,26 @@ sap.ui.define(
           if (oCtxModel) return oCtxModel.getData();
         } catch (e) { /* ignore */ }
 
-        // Fallback: read from URL params
+        // 3. URL hash query — FLP puts intent params after "#SemanticObject-action?"
+        var sHash = window.location.hash;
+        if (sHash.indexOf("?") > -1) {
+          var oHashParams = new URLSearchParams(sHash.substring(sHash.indexOf("?")));
+          if (oHashParams.get("ConfId")) {
+            var _dec = function (v) {
+              try { return v ? decodeURIComponent(v) : ""; } catch (e) { return v || ""; }
+            };
+            return {
+              ConfId:    _dec(oHashParams.get("ConfId")),
+              ConfName:  _dec(oHashParams.get("ConfName")),
+              ModuleId:  _dec(oHashParams.get("ModuleId")),
+              EnvId:     _dec(oHashParams.get("EnvId"))     || "DEV",
+              TargetCds: _dec(oHashParams.get("TargetCds")),
+              Mode:      _dec(oHashParams.get("Mode")),
+            };
+          }
+        }
+
+        // 4. Local dev fallback: URL search params
         var oParams = new URLSearchParams(window.location.search);
         return {
           ConfId:    oParams.get("ConfId")    || "",
@@ -263,6 +309,7 @@ sap.ui.define(
           ModuleId:  oParams.get("ModuleId")  || "",
           EnvId:     oParams.get("EnvId")     || "DEV",
           TargetCds: oParams.get("TargetCds") || "",
+          Mode:      oParams.get("Mode")      || "",
         };
       },
 
